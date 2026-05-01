@@ -31,7 +31,9 @@ RUN npm install
 
 COPY app/portal-api ./app/portal-api
 
+# IMPORTANT: generate after schema fix
 RUN npx prisma generate --schema=./prisma/schema.prisma
+
 RUN npm run build -w portal-api
 
 
@@ -44,11 +46,9 @@ RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm install --omit=dev
 
-COPY --from=backend-builder /app/dist/app/portal-api ./dist
+COPY --from=backend-builder /app/dist/apps/portal-api ./dist
 COPY --from=backend-builder /app/prisma ./prisma
 COPY --from=frontend-builder /app/app/portal-ui/dist ./client
-
-RUN npx prisma generate --schema=./prisma/schema.prisma
 
 ENV NODE_ENV=production
 EXPOSE 4000
