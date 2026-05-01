@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
-    "@types/node": "^25.6.0",
+    "@types/node": "^20.19.39",
     "concurrently": "^9.2.1",
     "prisma": "^7.7.0",
     "typescript": "^6.0.2"
