@@ -33,8 +33,11 @@ COPY app/portal-api ./app/portal-api
 # Generate Prisma Client for ADMIN/PARENT roles
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
+# ✅ Fix: Use npx to run the nest build for the specific workspace
+RUN npx nest build portal-api
+
 # ✅ Use the workspace build command from the root
-RUN npm run build -w portal-api
+#RUN npm run build -w portal-api
 
 # --- STAGE 3: Final Production Image ---
 FROM node:22-alpine
@@ -50,7 +53,7 @@ COPY --from=backend-builder /app/dist/app/portal-api ./dist
 # 3. Copy Prisma and static Frontend files
 COPY --from=backend-builder /app/prisma ./prisma
 COPY --from=backend-builder /app/package*.json ./
-COPY --from=frontend-builder /app/portal-ui/dist ./client 
+COPY --from=frontend-builder /app/app/portal-ui/dist ./client
 
 ENV NODE_ENV=production
 EXPOSE 4000
