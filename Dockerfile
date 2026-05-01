@@ -34,10 +34,10 @@ COPY app/portal-api ./app/portal-api
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # ✅ Fix: Use npx to run the nest build for the specific workspace
-RUN npx nest build portal-api
+#RUN npx nest build portal-api
 
 # ✅ Use the workspace build command from the root
-#RUN npm run build -w portal-api
+RUN npm run build -w portal-api
 
 # --- STAGE 3: Final Production Image ---
 FROM node:22-alpine
