@@ -1,13 +1,21 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    /* 🌐 Browser environment */
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+
+    /* ⚡ Vite / modern frontend */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    /* React / JSX */
     "jsx": "react-jsx",
-     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+
+    /* Types */
+    "types": ["vite/client"],
+
+    /* Build behavior */
+    "noEmit": true
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }
