@@ -13,8 +13,8 @@ COPY app/portal-ui ./app/portal-ui
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-# ✅ Fix: Call Vite binary directly from the root node_modules
-RUN ./node_modules/.bin/vite build --prefix app/portal-ui
+# ✅ Fix: Use --root for Vite
+RUN ./node_modules/.bin/vite build --root app/portal-ui
 
 # --- STAGE 2: Build Backend (portal-api) ---
 FROM node:20-alpine AS backend-builder
@@ -29,24 +29,24 @@ RUN npm install
 
 COPY app/portal-api ./app/portal-api
 
-# Generate Prisma client
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
-# ✅ Fix: Call Nest binary directly from the root node_modules
+# ✅ Fix: Direct binary call for Nest
 RUN ./node_modules/.bin/nest build portal-api
 
 # --- STAGE 3: Final Production Image ---
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy production dependencies
 COPY --from=backend-builder /app/node_modules ./node_modules
 
-# ✅ Fix: Ensure this matches your Nest outDir (usually dist/apps/portal-api)
+# Ensure this matches your actual build output directory
 COPY --from=backend-builder /app/dist/apps/portal-api ./dist
 
 COPY --from=backend-builder /app/prisma ./prisma
 COPY --from=backend-builder /app/package*.json ./
+
+# ✅ Update: Vite build --root app/portal-ui puts dist inside that folder
 COPY --from=frontend-builder /app/app/portal-ui/dist ./client 
 
 ENV NODE_ENV=production
