@@ -20,7 +20,7 @@
   },
   "private": true,
   "workspaces": [
-    "apps/*",
+    "app/*",
     "packages/*"
   ]
 }

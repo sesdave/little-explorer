@@ -1,51 +1,54 @@
 # --- STAGE 1: Build Frontend (portal-ui) ---
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
+
+# Copy workspace configuration and shared packages first
 COPY package*.json tsconfig.base.json ./
-COPY libs ./libs
-COPY portal-ui/package*.json ./portal-ui/
+COPY packages ./packages
+
+# Copy the specific app folder using the 'apps/' prefix
+COPY app/portal-ui/package*.json ./app/portal-ui/
+
+# Install dependencies for the whole workspace
 RUN npm install
-COPY portal-ui ./portal-ui
+
+# Copy the rest of the frontend source
+COPY app/portal-ui ./app/portal-ui
+
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
-RUN cd portal-ui && npm run build
+RUN cd app/portal-ui && npm run build
 
 # --- STAGE 2: Build Backend (portal-api) ---
 FROM node:20-alpine AS backend-builder
 WORKDIR /app
-COPY package*.json tsconfig.base.json ./
-COPY libs ./libs
 
-# 🏛️ Copy the ROOT Prisma folder
+COPY package*.json tsconfig.base.json ./
+COPY packages ./packages
 COPY prisma ./prisma 
 
-COPY portal-api/package*.json ./portal-api/
+COPY app/portal-api/package*.json ./app/portal-api/
 RUN npm install
-COPY portal-api ./portal-api
+COPY app/portal-api ./app/portal-api
 
-# Generate client using the root schema path and build to /app/dist/apps/portal-api
+# Generate Prisma client and build backend
 RUN npx prisma generate --schema=./prisma/schema.prisma
-RUN cd portal-api && npm run build
+RUN cd app/portal-api && npm run build
 
 # --- STAGE 3: Final Production Image ---
 FROM node:20-alpine
 WORKDIR /app
 
-# 1. Production dependencies
-COPY --from=backend-builder /app/portal-api/node_modules ./node_modules
-
-# 2. 🏛️ Copy compiled code from the root dist (as per backend tsconfig outDir)
-COPY --from=backend-builder /app/dist/apps/portal-api ./dist
-
-# 3. Copy root Prisma folder for runtime engine/schema access
+# Copy production node_modules from the root (where workspaces installs them)
+COPY --from=backend-builder /app/node_modules ./node_modules
+COPY --from=backend-builder /app/dist/app/portal-api ./dist
 COPY --from=backend-builder /app/prisma ./prisma
-COPY --from=backend-builder /app/portal-api/package*.json ./
+COPY --from=backend-builder /app/package*.json ./
 
-# 4. Copy Frontend static files into the 'client' folder
-COPY --from=frontend-builder /app/portal-ui/dist ./client 
+# Copy Frontend static files into the 'client' folder
+COPY --from=frontend-builder /app/app/portal-ui/dist ./client 
 
 ENV NODE_ENV=production
 EXPOSE 4000
 
-# NestJS main.js will be at /app/dist/main.js
 CMD ["node", "dist/main"]
