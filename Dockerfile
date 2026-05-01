@@ -45,12 +45,12 @@ COPY --from=backend-builder /app/node_modules ./node_modules
 
 # 2. Copy compiled NestJS code
 # Ensure this matches the outDir in your portal-api tsconfig
-COPY --from=backend-builder /app/dist/apps/portal-api ./dist
+COPY --from=backend-builder /app/dist/app/portal-api ./dist
 
 # 3. Copy Prisma and static Frontend files
 COPY --from=backend-builder /app/prisma ./prisma
 COPY --from=backend-builder /app/package*.json ./
-COPY --from=frontend-builder /app/app/portal-ui/dist ./client 
+COPY --from=frontend-builder /app/portal-ui/dist ./client 
 
 ENV NODE_ENV=production
 EXPOSE 4000
