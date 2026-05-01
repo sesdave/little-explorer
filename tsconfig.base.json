@@ -27,7 +27,7 @@
     
     /* Shared Paths for "My Little Explorers" */
     "paths": {
-      "@mle/types": ["libs/types/src/index.ts"]
+      "@mle/types":["packages/shared-types/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]
