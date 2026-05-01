@@ -1,26 +1,32 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config'; // 👈 Load environment variables
+import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static'; // 👈 Add this
+import { join } from 'path'; // 👈 Add this
 import { AuthModule } from './auth/auth.module';
-import { PrismaModule } from './prisma/prisma.module'; 
-import { FamilyModule } from './family/family.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ClassModule } from './class/class.module';
-import { SessionModule } from './session/session.module';
-import { S3Module } from './s3/s3.module'; // 👈 Import your new S3 module
-import { UserModule } from './user/user.module';
-import { EnrollmentModule } from './enrollment/enrollment.module';
 import { AdminModule } from './admin/admin.module';
+import { ClassModule } from './class/class.module';
 import { CommunicationModule } from './communication/communication.module';
+import { EnrollmentModule } from './enrollment/enrollment.module';
+import { FamilyModule } from './family/family.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { S3Module } from './s3/s3.module';
+import { SessionModule } from './session/session.module';
+import { UserModule } from './user/user.module';
+// ... your other imports
 
 @Module({
   imports: [
-    // isGlobal: true makes ConfigService available everywhere without re-importing
-    ConfigModule.forRoot({ isGlobal: true }), 
-    // 🚀 Register the Cache Module
+    ConfigModule.forRoot({ isGlobal: true }),
+    // 🏛️ Add this to serve your React Frontend
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'client'), 
+      exclude: ['/api*'], // 👈 Prevents frontend from intercepting API calls
+    }),
     CacheModule.register({
-      isGlobal: true,    // Makes CACHE_MANAGER available everywhere
-      ttl: 3600,         // Default time-to-live in seconds (1 hour)
-      max: 100,          // Maximum number of items in cache
+      isGlobal: true,
+      ttl: 3600,
+      max: 100,
     }),
     AuthModule, 
     PrismaModule, 
@@ -31,7 +37,7 @@ import { CommunicationModule } from './communication/communication.module';
     AdminModule,
     EnrollmentModule,
     CommunicationModule,
-    S3Module, // 👈 Add this so the S3 logic is registered
+    S3Module,
   ],
 })
 export class AppModule {}
