@@ -4,9 +4,10 @@ import { LoginDto, RegisterDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 // 1. Import the error class specifically
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+//import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CommunicationService } from '../communication/communication.service';
 import * as crypto from 'node:crypto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +36,7 @@ export class AuthService {
     } catch (error) {
       // 2. Change 'Prisma.PrismaClientKnownRequestError' to just 'PrismaClientKnownRequestError'
       // if the namespace check still fails, otherwise ensure npx prisma generate was run.
-      if (error instanceof PrismaClientKnownRequestError) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new BadRequestException('Email already exists');
         }
