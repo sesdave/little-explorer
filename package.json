@@ -11,6 +11,7 @@
     "@sendgrid/mail": "^8.1.6"
   },
   "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
     "prisma": "^7.7.0",
     "typescript": "^6.0.2",
     "concurrently": "^9.2.1"
