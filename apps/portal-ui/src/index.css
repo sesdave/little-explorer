@@ -1,0 +1,7 @@
+@import "tailwindcss";
+/* Your custom neobrutalist layers */
+@layer base {
+  body {
+    @apply bg-[#FFFBE2] text-slate-900;
+  }
+}

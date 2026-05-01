@@ -1,0 +1,9 @@
+{
+  "name": "@mle/types",
+  "version": "1.0.0",
+  "description": "App shared packages",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true,
+  "license": "ISC"
+}

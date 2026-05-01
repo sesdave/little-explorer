@@ -1,0 +1,26 @@
+{
+  "name": "little_explorer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.x.x",
+    "@sendgrid/mail": "^8.1.6"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prisma": "^5.x.x",
+    "typescript": "^6.0.2"
+  },
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

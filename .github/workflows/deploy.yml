@@ -1,0 +1,71 @@
+name: Deploy Little Explorer to AWS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Setup AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1
+
+      # 2. Login to the ECR Registry
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 3. Build and Push (Ensuring context is the ROOT)
+      - name: Build, Tag, and Push Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: little-explorer-repo
+          IMAGE_TAG: latest
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          # Build from the root (.) so the Dockerfile can see portal-api, portal-ui, and libs
+          docker build \
+            --build-arg VITE_API_URL=$VITE_API_URL \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # 4. SSH into EC2, Pull, Migrate, and Restart
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Login to ECR on the server
+            aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            
+            # Pull the latest image
+            docker pull ${{ steps.login-ecr.outputs.registry }}/little-explorer-repo:latest
+            
+            # Stop and remove the old container
+            docker stop little-explorer || true
+            docker rm little-explorer || true
+            
+            # Start the new container
+            docker run -d \
+              --name little-explorer \
+              -p 80:4000 \
+              --restart always \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              ${{ steps.login-ecr.outputs.registry }}/little-explorer-repo:latest
+
+            # 🛠️ AUTOMATIC DATABASE MIGRATION
+            # This ensures your Postgres tables match your schema.prisma
+            docker exec little-explorer npx prisma migrate deploy

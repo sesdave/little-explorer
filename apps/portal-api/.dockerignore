@@ -1,0 +1,23 @@
+# Local dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs from your Windows machine
+dist
+build
+.next
+out
+
+# Secrets and Config (These should come from AWS/GitHub Secrets)
+.env
+.env.local
+*.pem
+*.ppk
+
+# Infrastructure (Since this is in a separate sibling folder)
+../../infrastructure
+
+# Git metadata
+.git
+.gitignore

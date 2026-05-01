@@ -1,0 +1,27 @@
+# Dependency folders (The image will install its own)
+node_modules
+npm-debug.log
+
+# Infrastructure folder (AWS doesn't need your Terraform files inside the app)
+infrastructure/
+.terraform/
+*.tfstate*
+
+# Git metadata
+.git
+.gitignore
+
+# Environment & Secrets (CRITICAL)
+.env
+.env*
+*.pem
+*.ppk
+
+# Build artifacts from your local machine
+dist
+build
+.next
+
+# Documentation
+README.md
+docs/

@@ -1,0 +1,207 @@
+// This block tells Prisma to generate the TypeScript Client for you
+generator client {
+  provider = "prisma-client-js"
+}
+
+// This block connects your models to your actual PostgreSQL database
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums ---
+
+enum UserRole {
+  ADMIN
+  PARENT
+  INSTRUCTOR
+}
+
+// --- Models ---
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String // Hashed!
+  name      String // 👈 Combined field
+  role      UserRole @default(PARENT)
+  createdAt DateTime @default(now())
+
+  isEmailVerified   Boolean  @default(false)
+  verificationToken String?  @unique
+
+  // Relations
+  children     Child[]
+  applications Application[]
+}
+
+model Child {
+  id        String   @id @default(uuid())
+  firstName String // 👈 Split
+  lastName  String // 👈 Split
+  dob       DateTime
+  photoUrl  String? // 👈 Stores the public S3 URL
+  createdAt DateTime @default(now())
+
+  parentId      String
+  parent        User           @relation(fields: [parentId], references: [id])
+  registrations Registration[]
+}
+
+enum SessionStatus {
+  DRAFT
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  ACTIVE
+  COMPLETED
+}
+
+model Session {
+  id            String         @id @default(uuid())
+  name          String // e.g., "Summer Explorer 2026"
+  status        SessionStatus  @default(DRAFT)
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean        @default(false)
+  classes       Class[]
+  registrations Registration[]
+  applications  Application[]
+
+  // High-level metadata for the session
+  pricePerClass Decimal
+  maxCapacity   Int
+
+  createdAt DateTime @default(now())
+}
+
+model Class {
+  id        String  @id @default(uuid())
+  name      String // e.g., "Lions Section"
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  registrationsCount Int @default(0)
+
+  // 🔗 Lineage tracking: Keeps track of which class this was cloned from
+  clonedFromId String?
+  isVisible    Boolean @default(true)
+  price        Float?
+
+  // 👥 Text Array Optimization
+  instructorIds String[] // Array of User UUIDs
+
+  capacity Int
+  ageMin   Int
+  ageMax   Int
+
+  registrations Registration[]
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+// --------------------------------------
+// ENUMS for Type Safety
+// --------------------------------------
+
+enum ApplicationStatus {
+  PENDING // Created, but payment not confirmed
+  COMPLETED // Payment successful, spot confirmed
+  EXPIRED // Time-to-pay exceeded, spot released
+  CANCELLED // Manually retracted by parent/admin
+}
+
+enum PaymentPlan {
+  FULL
+  PARTIAL
+}
+
+// --------------------------------------
+// MODELS
+// --------------------------------------
+
+model Application {
+  id       String @id @default(cuid())
+  parentId String
+  parent   User   @relation(fields: [parentId], references: [id])
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  status      ApplicationStatus @default(PENDING)
+  paymentPlan PaymentPlan
+
+  // Track total amounts at the time of creation
+  totalAmount Decimal @db.Decimal(10, 2)
+
+  registrations Registration[]
+  payments      Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId, sessionId, status])
+}
+
+model Registration {
+  id String @id @default(cuid())
+
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  childId String
+  child   Child  @relation(fields: [childId], references: [id])
+
+  classId String
+  class   Class  @relation(fields: [classId], references: [id])
+
+  // Specific status for individual child placement
+  status String @default("PROVISIONAL") // PROVISIONAL | CONFIRMED
+
+  createdAt DateTime @default(now())
+
+  @@unique([childId, classId, applicationId]) // Prevent duplicate placement in same app
+}
+
+enum PaymentStatus {
+  PENDING // Transaction initiated but not yet successful
+  SUCCESSFUL // Money is in the bank
+  FAILED // Transaction declined
+  REFUNDED // Money returned to parent
+}
+
+enum PaymentMethod {
+  STRIPE
+  PAYSTACK
+  BANK_TRANSFER
+  CASH
+}
+
+model Payment {
+  id String @id @default(cuid())
+
+  // Link to the Application (The "Invoice")
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  // Financial Data
+  amount   Decimal       @db.Decimal(10, 2)
+  currency String        @default("USD")
+  status   PaymentStatus @default(PENDING)
+  method   PaymentMethod
+
+  // External Reference (e.g., Stripe PI ID or Paystack Ref)
+  // Crucial for reconciling with the payment gateway
+  externalReference String? @unique
+
+  // Metadata
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([applicationId, status])
+}

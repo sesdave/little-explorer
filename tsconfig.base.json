@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    
+    /* Strictness - Highly recommended for 2026 */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noFallthroughCasesInSwitch": true,
+    
+    /* Module Resolution */
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+
+    /* Advanced (Required for NestJS) */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    /* Shared Paths for "My Little Explorers" */
+    "paths": {
+      "@mle/types": ["libs/types/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}
