@@ -5,8 +5,8 @@ import {
 import { SessionService } from './session.service';
 import { JwtAuthGuard, RolesGuard } from '../auth/guard';
 import { Roles, Public } from '../auth/decorators';
-import { UserRole } from 'prisma/prisma-client';
 import { CreateSessionDto, CloneConfigDto } from './dto';
+import { UserRole } from '@prisma/client';
 
 @Controller('sessions')
 @UseGuards(JwtAuthGuard, RolesGuard)

@@ -5,7 +5,7 @@ import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard, RolesGuard } from '../auth/guard'; // 🔐 Custom Guard
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from 'prisma/prisma-client';
+import { UserRole } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard) // Every route in this controller requires a login

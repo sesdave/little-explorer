@@ -4,7 +4,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import * as cacheManager from 'cache-manager'; // ✅ Use namespace import
 import { SessionRepository } from './session.repository';
 import { CloneConfigDto, CreateSessionDto } from './dto';
-import { SessionStatus } from 'prisma/prisma-client';
+import { SessionStatus } from '@prisma/client';
 
 @Injectable()
 export class SessionService {
