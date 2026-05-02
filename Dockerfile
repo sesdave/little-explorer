@@ -71,7 +71,7 @@ RUN apk add --no-cache openssl
 
 # Install only production dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 
 RUN find /app -type f -name "main.js"
 
