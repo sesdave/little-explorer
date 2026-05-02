@@ -72,4 +72,7 @@ jobs:
               339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest
 
             echo "Running migrations..."
-            docker exec little-explorer npx prisma migrate deploy
+            docker run --rm \
+                    --env DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+                    339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest \
+                    npx prisma migrate deploy
