@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/apps/portal-api",
+    "outDir": "../../dist/app/portal-api",
 
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

@@ -72,10 +72,10 @@ RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm install --omit=dev
 
-RUN find /app -name "*.js"
+RUN ls -R /app
 
 # Copy backend build output
-COPY --from=backend-builder /app/app/portal-api/dist ./dist
+COPY --from=backend-builder /app/dist/app/portal-api ./dist
 
 # Copy Prisma schema (needed for runtime + migrations)
 COPY --from=backend-builder /app/prisma ./prisma
