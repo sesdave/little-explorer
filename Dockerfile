@@ -59,6 +59,7 @@ RUN npm run build -w @mle/types
 RUN npm run build -w portal-api
 
 
+
 # -----------------------------
 # STAGE 3: Production Runtime
 # -----------------------------
@@ -75,7 +76,7 @@ RUN npm install --omit=dev
 RUN find /app -type f -name "main.js"
 
 # Copy backend build output
-COPY --from=backend-builder /app/dist/app/portal-api ./dist
+COPY --from=backend-builder /app/dist/apps/portal-api ./dist
 
 # Copy Prisma schema (needed for runtime + migrations)
 COPY --from=backend-builder /app/prisma ./prisma
