@@ -39,7 +39,7 @@ RUN apk add --no-cache openssl
 COPY package*.json tsconfig.base.json ./
 
 # Copy shared packages + prisma schema
-COPY packages ./packages
+COPY app/shared-types ./app/shared-types
 COPY prisma ./prisma
 
 # Copy backend workspace manifest
