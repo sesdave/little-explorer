@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json tsconfig.base.json ./
 
 # Copy shared packages
-COPY packages ./packages
+COPY app/shared-types ./app/shared-types
 
 # Copy UI workspace manifest first (for caching)
 COPY app/portal-ui/package*.json ./app/portal-ui/
