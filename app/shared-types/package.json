@@ -2,5 +2,10 @@
   "name": "@mle/types",
   "version": "1.0.0",
   "private": true,
-  "type": "commonjs"
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
 }

@@ -53,6 +53,8 @@ COPY app/portal-api ./app/portal-api
 # Generate Prisma client (IMPORTANT for runtime + types)
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
+RUN npm run build -w @mle/types
+
 # Build NestJS app
 RUN npm run build -w portal-api
 
