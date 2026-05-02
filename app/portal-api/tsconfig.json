@@ -16,6 +16,7 @@
   "references": [
     { "path": "../shared-types" }
   ],
+  "composite": true,
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
