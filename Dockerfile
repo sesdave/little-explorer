@@ -73,7 +73,7 @@ COPY package*.json ./
 RUN npm install --omit=dev
 
 # Copy backend build output
-COPY --from=backend-builder /app/dist/app/portal-api ./dist
+COPY --from=backend-builder /app/dist ./dist
 
 # Copy Prisma schema (needed for runtime + migrations)
 COPY --from=backend-builder /app/prisma ./prisma
