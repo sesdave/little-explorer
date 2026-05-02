@@ -8,6 +8,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@mle/types': fileURLToPath(
+      new URL('../shared-types/src/index.ts', import.meta.url)
+     ),
+
     },
   },
 
