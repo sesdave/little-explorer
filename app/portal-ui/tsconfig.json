@@ -2,9 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "baseUrl": ".",
+
+    // ✅ IMPORTANT: align with monorepo root
+    "baseUrl": "../../",
+
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["app/portal-ui/src/*"],
+      "@mle/types": ["app/shared-types/src/index.ts"]
     }
   },
   "include": ["src"],

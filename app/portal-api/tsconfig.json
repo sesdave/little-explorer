@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "../../dist/apps/portal-api",
 
     "module": "NodeNext",
@@ -14,6 +13,9 @@
     "experimentalDecorators": true,
     "skipLibCheck": true
   },
+  "references": [
+    { "path": "../shared-types" }
+  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
