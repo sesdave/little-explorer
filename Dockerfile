@@ -72,7 +72,7 @@ RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm install --omit=dev
 
-RUN ls -R /app | grep dist || true
+RUN find /app -type f -name "main.js"
 
 # Copy backend build output
 COPY --from=backend-builder /app/dist/app/portal-api ./dist
