@@ -2,26 +2,33 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["node", "multer"],
-    /* 🛡️ New for TS 6.0: Silence the deprecation warnings */
     "ignoreDeprecations": "6.0",
-    
-    /* 🛠️ Modernize the resolution for Node.js */
+
+    /* Node runtime */
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    
-    /* 📁 Standard NestJS paths */
+
+    /* ✅ FIX: widen rootDir */
+    "rootDir": "../../",
+
+    /* output */
     "outDir": "../../dist/apps/portal-api",
-    "rootDir": "src",
     "noEmit": false,
-    
-    /* ✨ Mandatory for NestJS Dependency Injection */
+
+    /* NestJS */
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    
-    /* 📦 Compatibility fixes */
+
+    /* compatibility */
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+
+  /* ✅ FIX: include shared-types */
+  "include": [
+    "src/**/*",
+    "../shared-types/src/**/*"
+  ],
+
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

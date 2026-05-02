@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "app/*",
-    "packages/*"
+    "app/*"
   ],
   "dependencies": {
     "@prisma/client": "^7.7.0",

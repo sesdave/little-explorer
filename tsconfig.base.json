@@ -5,14 +5,16 @@
     "module": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "baseUrl": ".",
-    
-    /* Strictness - Highly recommended for 2026 */
+
+    /* TS 6 fix */
+    "ignoreDeprecations": "6.0",
+
+    /* Strictness */
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noFallthroughCasesInSwitch": true,
-    
+
     /* Module Resolution */
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
@@ -21,15 +23,13 @@
     "isolatedModules": true,
     "noEmit": true,
 
-    /* Advanced (Required for NestJS) */
+    /* NestJS */
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    
-    /* Shared Paths for "My Little Explorers" */
+
+    /* ✅ FIXED PATH */
     "paths": {
-      "@mle/types":["packages/shared-types/index.ts"]
+      "@mle/types": ["app/shared-types/src"]
     }
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"] 
+  }
 }
