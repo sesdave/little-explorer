@@ -50,7 +50,7 @@ export class AdminService {
         revenueTrend: "+5.4%", // Mocked
         explorerTrend: "+12%", // Mocked
       },
-      recentApps: recentApplications.map((app) => ({
+      recentApps: recentApplications.map((app: { id: any; parent: { name: any; }; registrations: string | any[]; status: any; totalAmount: any; paymentPlan: any; createdAt: any; }) => ({
         id: app.id,
         // 🏛️ Schema fix: app.parent.name instead of user.lastName
         parentName: app.parent?.name || 'Anonymous Parent',

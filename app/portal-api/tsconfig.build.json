@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/apps/portal-api",
+    "outDir": "../../dist/app/portal-api",
     "rootDir": "src"
   },
   "include": ["src/**/*"]

@@ -1,7 +1,7 @@
 // src/modules/enrollment/enrollment.repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaymentPlan } from '@prisma/client'; // ENUM: PARTIAL | FULL
+import { PaymentPlan } from '@prisma/client';
 
 @Injectable()
 export class EnrollmentRepository {

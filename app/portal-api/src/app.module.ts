@@ -17,7 +17,7 @@ import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', }),
     // 🏛️ Add this to serve your React Frontend
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client'), 

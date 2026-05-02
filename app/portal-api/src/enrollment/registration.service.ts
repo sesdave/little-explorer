@@ -29,7 +29,7 @@ export class RegistrationService {
 
     // 2. Hydrate & Validate Children
     // Ensure the children requested in the DTO actually belong to this parent
-    const selectedChildren = userContext.children.filter(c => 
+    const selectedChildren = userContext.children.filter((c: { id: string; }) => 
       dto.childIds.includes(c.id)
     );
 

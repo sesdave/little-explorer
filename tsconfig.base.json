@@ -21,15 +21,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
 
     /* NestJS */
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
-    /* ✅ FIXED PATH */
-    "paths": {
-      "@mle/types": ["app/shared-types/src"]
-    }
+    
   }
 }

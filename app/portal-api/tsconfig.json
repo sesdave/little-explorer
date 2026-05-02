@@ -3,16 +3,23 @@
   "compilerOptions": {
     "outDir": "../../dist/app/portal-api",
 
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
 
-    "baseUrl": "../../",
+    "target": "ES2022",
+    "types": ["node", "express", "multer"],
 
-    "types": ["node", "multer"],
+    "baseUrl": ".",
+
+    "rootDir": "./src",
+
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "skipLibCheck": true
+
+    "skipLibCheck": true,
+
+    "noEmit": false
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../prisma.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
