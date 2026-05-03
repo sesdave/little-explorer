@@ -13,11 +13,16 @@ export class S3Service {
     this.region = this.config.getOrThrow<string>('AWS_REGION');
     this.bucket = this.config.getOrThrow<string>('AWS_S3_BUCKET');
 
+    const accessKeyId = this.config.getOrThrow<string>('AWS_ACCESS_KEY_ID').trim();
+    const secretAccessKey = this.config.getOrThrow<string>('AWS_SECRET_ACCESS_KEY').trim();
+    console.log('AWS_ACCESS_KEY_ID:', accessKeyId);
+    console.log('AWS_SECRET_ACCESS_KEY length:', secretAccessKey.length);
+
     this.client = new S3Client({
-      region: this.region,
+      region: this.region.trim(),
       credentials: {
-        accessKeyId: this.config.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.config.getOrThrow<string>('AWS_SECRET_ACCESS_KEY'),
+        accessKeyId,
+        secretAccessKey,
       },
     });
   }
