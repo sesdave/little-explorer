@@ -4,6 +4,8 @@ import { useAuthStore } from '@/store/auth.store';
 import { Input } from '@/components/ui/Input';
 import { Camera, Loader2, X, Sun } from 'lucide-react';
 import { calculateAge } from '@/utils/date-utils';
+import { useNotificationStore } from '@/store/notification.store';
+import api from '@/services/api';
 
 interface AddChildModalProps {
   trigger: React.ReactNode;
@@ -44,45 +46,95 @@ export const AddChildModal = ({ trigger }: AddChildModalProps) => {
     }
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsSubmitting(true);
+
+  //   try {
+  //     // 1. Prepare Multipart Form Data
+  //     const data = new FormData();
+  //     data.append('firstName', formData.firstName);
+  //     data.append('lastName', formData.lastName);
+  //     data.append('dob', formData.dob);
+  //     if (formData.allergies) data.append('allergies', formData.allergies);
+  //     if (imageFile) data.append('photo', imageFile);
+
+  //     // 2. Backend Submission (NestJS)
+  //     const response = await fetch('http://localhost:4000/api/v1/family/children', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         // Browser automatically sets multipart/form-data boundary
+  //       },
+  //       body: data,
+  //     });
+
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.message || 'Failed to save explorer');
+  //     }
+
+  //     const savedChild = await response.json();
+
+  //     // 3. Update Zustand Store & UI
+  //     addChild(savedChild);
+      
+  //     // 4. Close Modal
+  //     setIsOpen(false);
+  //     resetForm();
+  //   } catch (error) {
+  //     console.error("Upload failed:", error);
+  //     alert(error instanceof Error ? error.message : "Could not save explorer profile.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const showNotification = useNotificationStore((state) => state.show);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // 1. Prepare Multipart Form Data
-      const data = new FormData();
-      data.append('firstName', formData.firstName);
-      data.append('lastName', formData.lastName);
-      data.append('dob', formData.dob);
-      if (formData.allergies) data.append('allergies', formData.allergies);
-      if (imageFile) data.append('photo', imageFile);
+      const form = new FormData();
+      form.append('firstName', formData.firstName);
+      form.append('lastName', formData.lastName);
+      form.append('dob', formData.dob);
 
-      // 2. Backend Submission (NestJS)
-      const response = await fetch('http://localhost:4000/api/v1/family/children', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // Browser automatically sets multipart/form-data boundary
-        },
-        body: data,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save explorer');
+      if (formData.allergies) {
+        form.append('allergies', formData.allergies);
       }
 
-      const savedChild = await response.json();
+      if (imageFile) {
+        form.append('photo', imageFile);
+      }
 
-      // 3. Update Zustand Store & UI
+      // ✅ Use axios instance (auto baseURL + auth header)
+      const { data } = await api.post('/v1/family/children', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // ✅ If backend returns { data: child }
+      const savedChild = data?.data || data;
+
       addChild(savedChild);
-      
-      // 4. Close Modal
+
+      showNotification('Explorer added successfully!', 'success');
+
       setIsOpen(false);
       resetForm();
-    } catch (error) {
+
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      alert(error instanceof Error ? error.message : "Could not save explorer profile.");
+
+      const message =
+        error.response?.data?.message ||
+        'Could not save explorer profile.';
+
+      showNotification(message, 'error');
     } finally {
       setIsSubmitting(false);
     }
