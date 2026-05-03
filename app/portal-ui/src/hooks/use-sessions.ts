@@ -21,26 +21,30 @@ export const useSessionClasses = (sessionId?: string) => {
     queryKey: ['session', sessionId, 'classes'],
     enabled: !!sessionId,
     queryFn: async () => {
-      const { data } = await api.get(`/v1/sessions/${sessionId}/classes`);
-      return data;
+      const res = await api.get(`/v1/sessions/${sessionId}/classes`);
+      return res.data;
     },
   });
 
-  const classes =
-    data?.classes?.map((c: any) => ({
-      ...c,
-      title: c.name, // 👈 map backend → frontend
-      isFull: c.capacity
-        ? (c._count?.registrations ?? 0) >= c.capacity
-        : false,
-      spotsLeft: c.capacity
-        ? Math.max(0, c.capacity - (c._count?.registrations ?? 0))
-        : null,
-    })) || [];
+  const classes = Array.isArray(data?.classes)
+    ? data.classes.map((c: any) => ({
+        id: c.id,
+        title: c.name ?? '',
+        capacity: c.capacity ?? 0,
+        isFull:
+          c.capacity != null
+            ? (c._count?.registrations ?? 0) >= c.capacity
+            : false,
+        spotsLeft:
+          c.capacity != null
+            ? Math.max(0, c.capacity - (c._count?.registrations ?? 0))
+            : null,
+      }))
+    : [];
 
   return {
     classes,
-    sessionName: '', // 👈 optional (you’re not returning it anymore)
+    sessionName: data?.sessionName ?? '',
     isLoading,
     ...rest,
   };
