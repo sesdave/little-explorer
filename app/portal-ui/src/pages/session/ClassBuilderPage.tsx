@@ -34,10 +34,13 @@ export const ClassBuilderPage = () => {
 
   // 3. Sync Logic: Populate local draft whenever server data is successfully fetched
   // This ensures the admin sees the "Current Truth" on initial load or after a reset.
+  // useEffect(() => {
+  //   if (classes) {
+  //     setLocalClasses(classes);
+  //   }
+  // }, [classes]);
   useEffect(() => {
-    if (classes) {
-      setLocalClasses(classes);
-    }
+    setLocalClasses(Array.isArray(classes) ? classes : []);
   }, [classes]);
 
   // 4. Update Handler: Marks a row as "isDirty" to track unsaved changes
