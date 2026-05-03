@@ -44,32 +44,46 @@ export const RegisterPage = () => {
     
     try {
       // NOTE: Ensure your NestJS backend has app.enableCors() enabled!
-      const response = await fetch('http://localhost:4000/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name, 
-          email, 
-          password,
-          role: 'PARENT' 
-        }),
-      });
+      const { data } = await api.post('/v1/auth/register', { name, email, password, role: 'PARENT' });
 
-      const data = await response.json();
-      console.log("resp data", response)
+      setAuth(data.user, data.access_token);
 
-      if (response.ok) {
-        showNotification("Adventure started! Welcome.", "success");
+      showNotification("Adventure started! Welcome.", "success");
         // NestJS typically returns { user, access_token }
-        setAuth(data.user, data.access_token);
-        // navigate('/dashboard');
-      } else {
-       showNotification(data.message || "Registration failed.", "error");
-       // alert(data.message || "Registration failed. Try a different trail!");
-      }
-    } catch (error) {
-      console.error("Connection failed", error);
-      alert("Could not connect to the adventure server. Is the backend running?");
+      
+      // const response = await fetch('http://localhost:4000/api/v1/auth/register', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ 
+      //     name, 
+      //     email, 
+      //     password,
+      //     role: 'PARENT' 
+      //   }),
+      // });
+
+     // const data = await response.json();
+      //console.log("resp data", response)
+
+      // if (response.ok) {
+      //   showNotification("Adventure started! Welcome.", "success");
+      //   // NestJS typically returns { user, access_token }
+      //   setAuth(data.user, data.access_token);
+      //   // navigate('/dashboard');
+      // } else {
+      //  showNotification(data.message || "Registration failed.", "error");
+      //  // alert(data.message || "Registration failed. Try a different trail!");
+      // }
+    } catch (error: any) {
+      console.error("Registration failed", error);
+
+      const message =
+        error.response?.data?.message ||
+        "Registration failed. Try a different trail!";
+
+      showNotification(message, "error");
+      // console.error("Connection failed", error);
+      // alert("Could not connect to the adventure server. Is the backend running?");
     } finally {
       setIsLoading(false);
     }
