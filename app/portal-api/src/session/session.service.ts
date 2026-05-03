@@ -93,7 +93,7 @@ export class SessionService {
     }
 
     // 2. Data: Fetch children via Repository
-    const classes = this.repository.findClassesBySessionId(sessionId);
+    const classes = await this.repository.findClassesBySessionId(sessionId);
 
     return {
       sessionName: session?.name,
