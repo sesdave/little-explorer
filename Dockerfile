@@ -70,8 +70,14 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 # Install only production dependencies
-COPY package*.json ./
-RUN npm install --omit=dev
+# COPY package*.json ./
+# RUN npm install --omit=dev
+# ✅ CRITICAL: reuse node_modules from builder
+COPY --from=backend-builder /app/node_modules ./node_modules
+
+# ✅ CRITICAL: preserve workspace structure
+COPY --from=backend-builder /app/app ./app
+COPY --from=backend-builder /app/package*.json ./
 
 RUN find /app -type f -name "main.js"
 
