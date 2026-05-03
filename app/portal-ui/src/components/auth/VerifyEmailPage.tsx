@@ -22,7 +22,7 @@ export const VerifyEmailPage = () => {
       }
 
       try {
-        await api.post(`/v1/auth/verify-email?token=${token}`);
+        await api.get(`/v1/auth/verify-email?token=${token}`);
         setStatus('success');
         
         // 🏛️ THE SUCCESS TOAST: Notifies the user immediately
