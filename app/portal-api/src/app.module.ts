@@ -21,7 +21,7 @@ import { UserModule } from './user/user.module';
     // 🏛️ Add this to serve your React Frontend
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client'), 
-      exclude: ['/api*'], // 👈 Prevents frontend from intercepting API calls
+      exclude: ['/api/(.*)'], // 👈 Prevents frontend from intercepting API calls
     }),
     CacheModule.register({
       isGlobal: true,
