@@ -37,10 +37,41 @@ export class AuthService {
       // 2. Change 'Prisma.PrismaClientKnownRequestError' to just 'PrismaClientKnownRequestError'
       // if the namespace check still fails, otherwise ensure npx prisma generate was run.
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new BadRequestException('Email already exists');
+  if (error.code === 'P2002') {
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingUser && !existingUser.isEmailVerified) {
+            const verificationToken = crypto.randomBytes(32).toString('hex');
+
+            await this.prisma.user.update({
+              where: { id: existingUser.id },
+              data: { verificationToken },
+            });
+
+            this.comms.sendVerificationEmail(
+              existingUser.email,
+              verificationToken,
+            );
+
+            return {
+              message: 'Account exists but not verified. New verification email sent.',
+              user: {
+                id: existingUser.id,
+                email: existingUser.email,
+                isEmailVerified: false,
+              },
+            };
+          }
+
+          if (existingUser?.isEmailVerified) {
+            throw new BadRequestException('Email already registered. Please login.');
+          }
         }
       }
+
       throw error;
     }
   }

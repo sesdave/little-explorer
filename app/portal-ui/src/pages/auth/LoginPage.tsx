@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { useAuthStore } from '@/store/auth.store';
 import { useNotificationStore } from '@/store/notification.store';
 import api from '@/services/api';
+import { VerificationGate } from '@/components/auth/VerificationGate';
 
 // Simplified Neo-brutalist Logo
 const WavingExplorer = () => (
@@ -24,36 +25,80 @@ export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+   const { user } = useAuthStore();
+   const [pendingUser, setPendingUser] = useState<any>(null);
+  const [showVerification, setShowVerification] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+
+  //   try {
+  //     // 1. Hit the centralized API
+  //     const { data } = await api.post('/v1/auth/login', { email, password });
+
+  //     // 2. Persist to Zustand (matches your AuthState interface)
+  //     // Note: mapping backend 'access_token' to store 'token'
+  //     setAuth(data.user, data.access_token);
+      
+  //     showNotification(`Welcome back, ${data.user.name}!`, "success");
+
+  //     // 3. Intelligent Redirect based on Role
+  //     if (data.user.role === 'ADMIN') {
+  //       navigate('/admin');
+  //     } else {
+  //       navigate('/dashboard');
+  //     }
+  //   } catch (error: any) {
+  //     // Fallback error message if the backend doesn't provide one
+  //     const message = error.response?.data?.message || "Oops! Wrong password for this adventure.";
+  //     showNotification(message, "error");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+      e.preventDefault();
+      setIsLoading(true);
 
-    try {
-      // 1. Hit the centralized API
-      const { data } = await api.post('/v1/auth/login', { email, password });
+      try {
+        const { data } = await api.post('/v1/auth/login', { email, password });
 
-      // 2. Persist to Zustand (matches your AuthState interface)
-      // Note: mapping backend 'access_token' to store 'token'
-      setAuth(data.user, data.access_token);
-      
-      showNotification(`Welcome back, ${data.user.name}!`, "success");
+        const user = data.user;
 
-      // 3. Intelligent Redirect based on Role
-      if (data.user.role === 'ADMIN') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
+        // 🚨 BLOCK UNVERIFIED USERS
+        if (!user.isEmailVerified) {
+          setPendingUser(user);
+          setShowVerification(true);
+
+          useNotificationStore
+            .getState()
+            .show("Please verify your email before continuing", "warning");
+
+          return;
+        }
+
+        // ✅ Normal login
+        setAuth(user, data.access_token);
+
+        useNotificationStore
+          .getState()
+          .show(`Welcome back, ${user.name}!`, "success");
+
+        navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard');
+
+      } catch (error: any) {
+        const message =
+          error.response?.data?.message || "Invalid login credentials";
+
+        useNotificationStore.getState().show(message, "error");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error: any) {
-      // Fallback error message if the backend doesn't provide one
-      const message = error.response?.data?.message || "Oops! Wrong password for this adventure.";
-      showNotification(message, "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+    };
   return (
     <div className="min-h-screen bg-[#FFFBE2] flex items-center justify-center p-4 md:p-10 font-medium">
       <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-[0.8fr_1.2fr] bg-white rounded-[2.5rem] border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] overflow-hidden">

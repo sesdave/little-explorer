@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 // Define the specific allowed types
-export type NotificationType = 'success' | 'error' | 'info';
+export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
 interface NotificationState {
   message: string | null;
