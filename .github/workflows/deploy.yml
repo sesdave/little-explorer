@@ -69,7 +69,16 @@ jobs:
               --restart always \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest
+              -e AWS_REGION="${{ secrets.AWS_REGION }}" \
+              -e AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}" \
+              -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+              -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+              -e SENDGRID_API_KEY="${{ secrets.SENDGRID_API_KEY }}" \
+              -e TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
+              -e TWILIO_SID="${{ secrets.TWILIO_SID }}" \
+              -e TWILIO_PHONE_NUMBER="${{ secrets.TWILIO_PHONE_NUMBER }}" \
+              -e FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
+              339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest  
 
             echo "Running migrations..."
             docker run --rm \
