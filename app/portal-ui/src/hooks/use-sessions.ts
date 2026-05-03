@@ -3,6 +3,48 @@ import api from '@/services/api';
 import { toast } from 'react-hot-toast';
 import { SessionEntity, SessionStatus } from '@mle/types';
 
+interface SessionClassesResponse {
+  id: string;
+  name: string;
+  classes: {
+    id: string;
+    title: string;
+    capacity?: number;
+    _count?: {
+      registrations: number;
+    };
+  }[];
+}
+
+export const useSessionClasses = (sessionId?: string) => {
+  const { data, isLoading, ...rest } = useQuery({
+    queryKey: ['session', sessionId, 'classes'],
+    enabled: !!sessionId,
+    queryFn: async () => {
+      const { data } = await api.get(`/v1/sessions/${sessionId}/classes`);
+      return data;
+    },
+  });
+
+  const classes =
+    data?.classes?.map((c: any) => ({
+      ...c,
+      title: c.name, // 👈 map backend → frontend
+      isFull: c.capacity
+        ? (c._count?.registrations ?? 0) >= c.capacity
+        : false,
+      spotsLeft: c.capacity
+        ? Math.max(0, c.capacity - (c._count?.registrations ?? 0))
+        : null,
+    })) || [];
+
+  return {
+    classes,
+    sessionName: '', // 👈 optional (you’re not returning it anymore)
+    isLoading,
+    ...rest,
+  };
+};
 export const useSessions = () => {
   const queryClient = useQueryClient();
   const queryKey = ['sessions', 'list'];

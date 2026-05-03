@@ -128,12 +128,12 @@ async findById(id: string) {
     });
   }
 
-  async findClassesBySessionId(sessionId: string): Promise<Class[]> {
-    return this.prisma.class.findMany({
-      where: { sessionId },
-      orderBy: { createdAt: 'asc' },
-    });
-  }
+  // async findClassesBySessionId(sessionId: string): Promise<Class[]> {
+  //   return this.prisma.class.findMany({
+  //     where: { sessionId },
+  //     orderBy: { createdAt: 'asc' },
+  //   });
+  // }
 
   /**
    * Retrieves the current operational session with age-graded classes.
@@ -164,4 +164,19 @@ async findById(id: string) {
       },
     });
   }
+
+  async findClassesBySessionId(sessionId: string) {
+  return this.prisma.class.findMany({
+    where: { sessionId },
+    orderBy: { createdAt: 'asc' },
+    select: {
+      id: true,
+      name: true, // 👈 keep backend consistent
+      capacity: true,
+      _count: {
+        select: { registrations: true },
+      },
+    },
+  });
+}
 }

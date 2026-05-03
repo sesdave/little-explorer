@@ -23,7 +23,7 @@ export const SessionManagerPage = () => {
 
   const handleCreateConfirm = async (dto: any) => {
     try {
-      await api.post('/sessions', dto);
+      await api.post('/v1/sessions', dto);
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
     } catch (error) {
       console.error("Creation failed", error);
@@ -45,7 +45,7 @@ export const SessionManagerPage = () => {
   const handleCloneConfirm = async (data: { name: string; year: number }) => {
   if (!sessionToClone) return;
   try {
-    await api.post(`/sessions/${sessionToClone.id}/clone`, data);
+    await api.post(`/v1/sessions/${sessionToClone.id}/clone`, data);
     queryClient.invalidateQueries({ queryKey: ['sessions'] });
     setShowCloneModal(false); // 👈 Close here for better UX
   } catch (error) {
