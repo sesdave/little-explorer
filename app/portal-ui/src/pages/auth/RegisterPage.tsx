@@ -25,7 +25,7 @@ export const RegisterPage = () => {
     if (!user?.email) return;
       if (cooldown > 0) return; // Block if cooling down
       
-      await api.post('/auth/resend-verification', { email: user.email });
+      await api.post('/v1/auth/resend-verification', { email: user.email });
       
       setCooldown(60); // Set a 60-second wait
       const timer = setInterval(() => {
