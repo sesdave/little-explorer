@@ -99,22 +99,28 @@ export class AuthService {
   };
 }
 
-async verifyEmail(token: string) {
+  async verifyEmail(token: string) {
     const user = await this.prisma.user.findUnique({
       where: { verificationToken: token }
     });
 
     if (!user) throw new BadRequestException('Invalid or expired token');
 
-    await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: user.id },
       data: { 
         isEmailVerified: true, 
-        verificationToken: null // Clear token after use
+        verificationToken: null
       }
     });
 
-    return { message: 'Email verified successfully' };
+    // ✅ RETURN TOKEN
+    return this.signToken(
+      updatedUser.id,
+      updatedUser.email,
+      updatedUser.role,
+      updatedUser.isEmailVerified
+    );
   }
 
   async resendVerification(email: string) {
