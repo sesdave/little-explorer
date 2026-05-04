@@ -60,7 +60,7 @@ const getPrice = (price: any): number => {
       console.log("submited data", res);
       const applicationId = res?.data?.applicationId;
 
-      navigate(`/dashboard/payment/${applicationId}`);
+      navigate(`/dashboard/payment/${applicationId}`, { replace: true });
       //navigate('/dashboard?success=true');
     } catch (error) {
       console.error("Registration failed", error);
