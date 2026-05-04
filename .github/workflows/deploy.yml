@@ -79,6 +79,7 @@ jobs:
               -e TWILIO_SID="${{ secrets.TWILIO_SID }}" \
               -e TWILIO_PHONE_NUMBER="${{ secrets.TWILIO_PHONE_NUMBER }}" \
               -e VITE_PAYSTACK_PUBLIC_KEY="${{ secrets.VITE_PAYSTACK_PUBLIC_KEY }}" \
+              -e PAYSTACK_SECRET_KEY="${{ secrets.PAYSTACK_SECRET_KEY }}" \
               -e FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
               339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest
 
@@ -113,7 +114,7 @@ jobs:
             sudo systemctl restart nginx
 
             echo "🔐 Setting up SSL (first run only)..."
-            sudo certbot --nginx -d imaag.it.com --non-interactive --agree-tos -m your-email@example.com || true
+            sudo certbot --nginx -d imaag.it.com --non-interactive --agree-tos -m sesughdtyohemba@gmail.com || true
 
             echo "♻️ Enabling auto-renew..."
             sudo systemctl enable certbot-renew.timer
