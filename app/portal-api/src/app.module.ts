@@ -16,6 +16,7 @@ import { S3Module } from './s3/s3.module';
 import { SessionModule } from './session/session.module';
 import { UserModule } from './user/user.module';
 import { SpaModule } from './spa/spa.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { SpaModule } from './spa/spa.module';
     EnrollmentModule,
     CommunicationModule,
     S3Module,
+    PaymentModule,
 
     // SPA fallback (React Router support)
     SpaModule,
