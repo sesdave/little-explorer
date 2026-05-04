@@ -36,9 +36,11 @@ jobs:
       - name: Build, Tag, and Push Image to ECR
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_PAYSTACK_PUBLIC_KEY: ${{ secrets.VITE_PAYSTACK_PUBLIC_KEY }}
         run: |
           docker build \
             --build-arg VITE_API_URL=$VITE_API_URL \
+            --build-arg VITE_PAYSTACK_PUBLIC_KEY=$VITE_PAYSTACK_PUBLIC_KEY \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
