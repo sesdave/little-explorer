@@ -5,6 +5,7 @@ import { PaymentService } from './payment.service';
 import { PaymentRepository } from './payment.repository';
 import { EnrollmentModule } from '../enrollment/enrollment.module'; // 👈 Import to use EnrollmentRepo
 import { PrismaModule } from '../prisma/prisma.module';
+import { EnrollmentRepository } from 'src/enrollment/enrollment.repository';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { PrismaModule } from '../prisma/prisma.module';
   controllers: [PaymentController],
   providers: [
     PaymentService, 
-    PaymentRepository
+    PaymentRepository,
+    EnrollmentRepository,
   ],
   exports: [PaymentService], // Exported in case other modules need to check payment status
 })
