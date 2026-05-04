@@ -54,50 +54,16 @@ jobs:
           script: |
             set -e
 
-            echo "Installing Nginx + Certbot (safe - only installs if missing)..."
-            sudo dnf install -y nginx certbot python3-certbot-nginx || true
-
-            sudo systemctl enable nginx
-            sudo systemctl start nginx
-
-            echo "Configuring Nginx reverse proxy..."
-
-            sudo tee /etc/nginx/conf.d/little-explorer.conf > /dev/null <<'EOF'
-            server {
-                listen 80;
-                server_name imaag.it.com;
-
-                location / {
-                    proxy_pass http://localhost:4000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host $host;
-                    proxy_cache_bypass $http_upgrade;
-                }
-            }
-            EOF
-
-            sudo nginx -t && sudo systemctl reload nginx
-
-            echo "Checking SSL certificate..."
-            if [ ! -d "/etc/letsencrypt/live/imaag.it.com" ]; then
-              echo "Issuing SSL certificate..."
-              sudo certbot --nginx -d imaag.it.com --non-interactive --agree-tos -m your-email@example.com
-            else
-              echo "SSL already exists"
-            fi
-
-            echo "Logging into ECR..."
+            echo "🚀 Logging into ECR..."
             aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 339713127263.dkr.ecr.us-west-1.amazonaws.com
 
-            echo "Pulling latest image..."
+            echo "📦 Pulling latest image..."
             docker pull 339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest
 
-            echo "Stopping old container..."
+            echo "🛑 Stopping old container..."
             docker rm -f little-explorer || true
 
-            echo "Starting new container..."
+            echo "▶️ Starting new container on port 4000..."
             docker run -d \
               --name little-explorer \
               -p 4000:4000 \
@@ -116,11 +82,41 @@ jobs:
               -e FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
               339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest
 
-            echo "Running migrations..."
+            echo "🗄️ Running migrations..."
             docker run --rm \
               --env DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest \
               npx prisma migrate deploy
 
-            echo "Reloading Nginx..."
-            sudo systemctl reload nginx
+            echo "🌐 Installing Nginx + Certbot (if not installed)..."
+            sudo dnf install -y nginx certbot python3-certbot-nginx || true
+
+            echo "⚙️ Writing Nginx config..."
+            sudo tee /etc/nginx/conf.d/app.conf > /dev/null <<EOF
+            server {
+                listen 80;
+                server_name imaag.it.com;
+
+                location / {
+                    proxy_pass http://localhost:4000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+            }
+            EOF
+
+            echo "🔁 Restarting Nginx..."
+            sudo systemctl enable nginx
+            sudo systemctl restart nginx
+
+            echo "🔐 Setting up SSL (first run only)..."
+            sudo certbot --nginx -d imaag.it.com --non-interactive --agree-tos -m your-email@example.com || true
+
+            echo "♻️ Enabling auto-renew..."
+            sudo systemctl enable certbot-renew.timer
+            sudo systemctl start certbot-renew.timer
+
+            echo "✅ Deployment complete!"
