@@ -9,26 +9,53 @@ export const PaymentPage = () => {
   const { applicationId } = useParams();
   const navigate = useNavigate();
   // Expecting application details from your loader (amount, email, etc.)
-  const { application, userEmail } = useLoaderData() as any;
+  //const { application, userEmail } = useLoaderData() as any;
+  const {data} = useLoaderData() as any;
+  console.log("returned data", data);
+
+  const application = data?.application ?? data;
+  const userEmail = data?.userEmail ?? data?.email ?? "sesughdtyohemba@gmail.com";
+  const tamount = Number(application?.totalAmount ?? 0);
 
   const config = {
-  reference: `explorer_${applicationId}_${new Date().getTime()}`,
-  email: userEmail,
-  amount: Math.round(Number(application.totalAmount) * 100),
-  publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-  metadata: {
-    applicationId,
-    custom_fields: [
-      { display_name: "Application ID", variable_name: "application_id", value: applicationId }
-    ]
-  }
-};
+    reference: `explorer_${applicationId}_${new Date().getTime()}`,
+    email: userEmail,
+    amount: Math.round(tamount * 100),
+    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+    metadata: {
+      applicationId,
+      custom_fields: [
+        { display_name: "Application ID", variable_name: "application_id", value: applicationId }
+      ]
+    }
+  };
+
+  const handlePaymentClick = () => {
+    if (!userEmail) {
+      console.error("Missing email");
+      alert("User email is required for payment");
+      return;
+    }
+
+    if (!tamount || tamount <= 0) {
+      console.error("Invalid amount", tamount);
+      alert("Invalid payment amount");
+      return;
+    }
+
+    if (!import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) {
+      console.error("Missing Paystack key");
+      return;
+    }
+
+    initializePayment({ onSuccess, onClose });
+  };
 
   const initializePayment = usePaystackPayment(config);
 
   const onSuccess = async (reference: any) => {
     // 🏛️ Principal Move: Don't confirm yet. Inform user we are verifying.
-    navigate(`/payment/verifying?reference=${reference.reference}`);
+    navigate(`/dashboard/payment/verifying?reference=${reference.reference}`);
   };
 
   const onClose = () => {
@@ -54,7 +81,7 @@ export const PaymentPage = () => {
       </div>
 
       <button 
-        //onClick={() => initializePayment(onSuccess, onClose)}
+        onClick={handlePaymentClick}
         className="w-full py-8 text-3xl font-black bg-emerald-500 text-white border-4 border-slate-900 shadow-[8px_8px_0px_0px_#0f172a] hover:shadow-none hover:translate-y-1 transition-all uppercase italic"
       >
         Pay with Paystack

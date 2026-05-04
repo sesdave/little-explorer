@@ -37,7 +37,7 @@ export const FamilyOverview = () => {
             <div 
               key={child.id} 
               // One click to rule them all: takes them to the bulk selection page
-              onClick={() => navigate('/dashboard/register')}
+              // onClick={() => navigate('/dashboard/register')}
               className="flex flex-col items-center group cursor-pointer"
             >
               <div className="relative w-28 h-28 mb-3">

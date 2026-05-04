@@ -4,9 +4,44 @@ import { useMemo } from 'react';
 interface EnrollmentData {
   children: any[];
   session: any | null;
+  pendingApplication: any | null;
 }
 
 export const useEnrollmentStatus = (data: EnrollmentData) => {
+  const { children, session, pendingApplication } = data;
+
+  const activeApplication = pendingApplication;
+
+  const needsEnrollment = useMemo(() => {
+    if (!session) return false;
+
+    // No application at all → user hasn't started
+    return !activeApplication;
+  }, [session, activeApplication]);
+
+  const needsPayment = useMemo(() => {
+    if (!activeApplication) return false;
+
+    return (
+      activeApplication.status === 'PENDING'
+    );
+  }, [activeApplication]);
+
+  const isActive = useMemo(() => {
+    return activeApplication?.status === 'COMPLETED';
+  }, [activeApplication]);
+
+  return {
+    needsEnrollment,
+    needsPayment,
+    isActive,
+    pendingApplication: activeApplication,
+    activeSessionName: session?.name || 'New Season',
+    isSessionActive: !!session
+  };
+};
+
+/*export const useEnrollmentStatus = (data: EnrollmentData) => {
   const { children, session } = data;
 
   const needsEnrollment = useMemo(() => {
@@ -28,4 +63,4 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
     activeSessionName: session?.name || 'New Season',
     isSessionActive: !!session
   };
-};
+};*/

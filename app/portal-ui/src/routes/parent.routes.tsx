@@ -3,6 +3,9 @@ import { ParentPortalLayout } from '@/layouts/ParentPortalLayout';
 import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { RegistrationPage } from '@/pages/RegistrationPage';
 import { getFamilyDashboardData } from '../services/family.service';
+import { PaymentPage } from '@/pages/payment/PaymentPage';
+import { PaymentVerifying } from '@/pages/payment/PaymentVerifying';
+import api from '@/services/api';
 
 export const parentRoutes: RouteObject = {
   path: '/dashboard', // 👈 ADD THE SLASH HERE
@@ -18,6 +21,21 @@ export const parentRoutes: RouteObject = {
       path: 'register', 
       element: <RegistrationPage />,
       loader: async () => await getFamilyDashboardData(),
+    },
+     // 🧠 NEW: Payment page (Paystack entry point)
+    {
+      path: 'payment/:applicationId',
+      element: <PaymentPage />,
+      loader: async ({ params }) => {
+        const res = await api.get(`/v1/registrations/applications/pending/${params.applicationId}`);
+        return res.data;
+      }
+    },
+
+    // 🧠 NEW: Verification callback page
+    {
+      path: 'payment/verifying',
+      element: <PaymentVerifying />,
     },
   ]
 };

@@ -1,5 +1,5 @@
 // src/modules/enrollment/enrollment.controller.ts
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RegistrationService } from './registration.service';
@@ -20,5 +20,18 @@ export class EnrollmentController {
     @Body() dto: BulkRegisterDto,
   ) {
     return await this.registrationService.handleBulkRegistration(userId, dto);
+  }
+
+  @Get('applications/pending/:sessionId')
+  async getPendingApplication(
+    @CurrentUser('id') userId: string,
+    @Param('sessionId') sessionId: string
+  ) {
+    
+    const application = await this.registrationService.findPendingApplication(
+      sessionId
+    );
+    console.log("entered application", sessionId, application);
+    return {success: true, data: application };
   }
 }

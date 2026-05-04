@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLoaderData, useNavigate, useOutletContext } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { calculateAge } from '@/utils/date-utils';
 import { CheckCircle2, AlertCircle, CreditCard, Wallet } from 'lucide-react';
 import api from '@/services/api';
-import { VerificationGate } from '@/components/auth/VerificationGate';
 
 export const RegistrationPage = () => {
   const navigate = useNavigate();
@@ -13,8 +12,17 @@ export const RegistrationPage = () => {
   const { 
     children = [], 
     availableClasses = [], 
-    session = { id: '', name: '', pricePerClass: 0 } 
+    session = { id: '', name: '', pricePerClass: 0 },
+    pendingApplication 
   } = data || {};
+
+  useEffect(() => {
+    console.log("enter useEffect", pendingApplication);
+    if (pendingApplication?.id) {
+      console.log("trying to navigate", pendingApplication.id)
+      navigate(`/dashboard/payment/${pendingApplication.id}`, { replace: true });
+    }
+  }, [pendingApplication, navigate]);
   
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [paymentPlan, setPaymentPlan] = useState<'FULL' | 'PARTIAL'>('FULL'); // 👈 New State
@@ -44,12 +52,16 @@ const getPrice = (price: any): number => {
   const handleBulkSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await api.post('/v1/registrations/bulk', {
+      const res = await api.post('/v1/registrations/bulk', {
         sessionId: session.id,
         childIds: selectedIds,
         paymentPlan: paymentPlan // 👈 Now sending the required enum
       });
-      navigate('/dashboard?success=true');
+      console.log("submited data", res);
+      const applicationId = res?.data?.applicationId;
+
+      navigate(`/payment/${applicationId}`);
+      //navigate('/dashboard?success=true');
     } catch (error) {
       console.error("Registration failed", error);
     } finally {

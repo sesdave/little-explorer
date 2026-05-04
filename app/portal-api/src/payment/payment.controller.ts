@@ -15,6 +15,7 @@ export class PaymentController {
     @Body() payload: any,
     @Headers('x-paystack-signature') signature: string,
   ) {
+    console.log("got a paystack response")//http://18.145.52.208/api/v1/payments/webhook
     // We pass both to the service. The service handles verification + processing.
     await this.paymentService.handlePaystackWebhook(payload, signature);
     return { received: true };

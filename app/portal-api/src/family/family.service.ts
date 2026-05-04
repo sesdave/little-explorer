@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { SessionRepository } from '../session/session.repository';
 import { UserRepository } from '../user/user.repository';
+import { EnrollmentRepository } from 'src/enrollment/enrollment.repository';
 
 // 1. Define a specific type for the return data to ensure TS 
 // knows exactly what 'children' contains.
@@ -27,7 +28,9 @@ export type DashboardData = Prisma.UserGetPayload<{
 export class FamilyService {
   constructor(private prisma: PrismaService, 
     private readonly userRepo: UserRepository,    // 👈 Injected
-    private readonly sessionRepo: SessionRepository,) {}
+    private readonly sessionRepo: SessionRepository,
+    private readonly enrollmentRepo: EnrollmentRepository,
+  ) {}
 
   /**
    * Fetches dashboard data using a flat 'select' for better performance
@@ -40,6 +43,18 @@ export class FamilyService {
       this.sessionRepo.getActiveSessionWithClasses(),
       this.userRepo.findRecentPayments(userId), // 👈 New fetch
     ]);
+
+    if (!userData) {
+      throw new NotFoundException(`User profile not found for ID: ${userId}`);
+    }
+
+    const pendingApplication = activeSession
+    ? await this.enrollmentRepo.findPendingApplication(
+        userId,
+        activeSession.id
+      )
+    : null;
+
 
     if (!userData) {
       throw new NotFoundException(`User profile not found for ID: ${userId}`);
@@ -75,6 +90,7 @@ export class FamilyService {
       recentPayments, 
       activeRegistrations: enrollmentStats.confirmed + enrollmentStats.provisional,
       availableClasses: this.enrichClasses(activeSession?.classes || []),
+      pendingApplication,
     };
   }
 

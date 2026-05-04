@@ -14,43 +14,64 @@ export const DashboardPage = () => {
   const familyData = useLoaderData() as any;
   const setChildren = useFamilyStore((state) => state.setChildren);
 
-  const { children, session, parentName, recentPayments, activeRegistrations } = familyData;
-  console.log("family Data", familyData);
+  const {
+    children,
+    session,
+    parentName,
+    recentPayments,
+    activeRegistrations,
+  } = familyData;
 
   useEffect(() => {
     if (children) setChildren(children);
   }, [children, setChildren]);
 
   const childrenNames = useMemo(() => {
-    if (!children || children.length === 0) return "your little explorers";
+    if (!children?.length) return 'your little explorers';
     const names = children.map((c: any) => c.firstName);
     if (names.length === 1) return names[0];
     const last = names.pop();
     return `${names.join(', ')} and ${last}`;
   }, [children]);
 
-  const { needsEnrollment, activeSessionName } = useEnrollmentStatus({
+  const { needsEnrollment, pendingApplication } = useEnrollmentStatus({
     children: familyData.children,
-    session: familyData.session
+    session: familyData.session,
+    pendingApplication: familyData.pendingApplication,
   });
 
+  const handlePrimaryAction = () => {
+    if (pendingApplication?.id) {
+      navigate(`/dashboard/payment/${pendingApplication.id}`);
+      return;
+    }
+
+    navigate('/dashboard/register');
+  };
+
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-10 animate-in fade-in duration-700 pb-20">
-      
-      {/* 🏛️ 1. TOP LEVEL HEADER: Full Width */}
+    <div className="max-w-7xl mx-auto p-6 space-y-10 pb-20">
+
+      {/* HEADER */}
       <header className="bg-white p-8 rounded-[2rem] border-4 border-slate-900 shadow-[8px_8px_0px_0px_#0f172a]">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter">
+            <h1 className="text-4xl font-black text-slate-900 uppercase italic">
               Welcome, {parentName || 'Explorer'}
             </h1>
             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mt-1">
-              Active Session: <span className="text-sky-500">{session?.name || 'Loading...'}</span>
+              Active Session: <span className="text-sky-500">{session?.name}</span>
             </p>
           </div>
+
           <div className="hidden lg:flex gap-4">
-             {needsEnrollment ? (
-              <EnrollmentButton onClick={() => navigate('/dashboard/register')} />
+            {pendingApplication ? (
+              <EnrollmentButton
+                onClick={handlePrimaryAction}
+                variant="payment"
+              />
+            ) : needsEnrollment ? (
+              <EnrollmentButton onClick={handlePrimaryAction} />
             ) : (
               <SystemStatus />
             )}
@@ -58,39 +79,37 @@ export const DashboardPage = () => {
         </div>
       </header>
 
-      {/* 🏛️ 2. THE MAIN SPLIT: Separating the Family World from the Sidebar */}
+      {/* MAIN */}
       <div className="flex flex-col lg:flex-row gap-12">
-        
-        {/* --- LEFT SIDE: THE FAMILY CONTENT (Independent Flow) --- */}
-        <main className="flex-1 space-y-12">
-          <section>
-            <h2 className="text-xl font-black uppercase italic mb-6 text-slate-900"></h2>
-            <FamilyOverview />
-          </section>
 
-          {/* Registration CTA is now isolated within the main flow */}
-          <section className="bg-amber-100 rounded-[3.5rem] p-10 border-4 border-slate-900 shadow-[12px_12px_0px_0px_#0f172a] flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="max-w-md">
-              <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tight">Ready to Explore?</h2>
-              <p className="font-bold text-slate-700 mt-2">Check out the new classes available for {childrenNames}.</p>
+        <main className="flex-1 space-y-12">
+          <FamilyOverview />
+
+          <section className="bg-amber-100 rounded-[3.5rem] p-10 border-4 border-slate-900 shadow-[12px_12px_0px_0px_#0f172a] flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-black uppercase italic">
+                Ready to Explore?
+              </h2>
+              <p className="font-bold text-slate-700">
+                Check available classes for {childrenNames}.
+              </p>
             </div>
-            <Button 
-              onClick={() => navigate('/dashboard/register')}
-              className="bg-rose-400 text-white border-4 border-slate-900 shadow-[6px_6px_0px_0px_#0f172a] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all px-12 py-6 text-xl font-black"
+
+            <Button
+              onClick={handlePrimaryAction}
+              className="bg-rose-400 text-white border-4 border-slate-900 px-10 py-5 text-xl font-black"
             >
-              BROWSE CLASSES
+               BROWSE CLASSES
             </Button>
           </section>
         </main>
 
-        {/* --- RIGHT SIDE: THE ISOLATED SIDEBAR --- */}
+        {/* SIDEBAR */}
         <aside className="w-full lg:w-[380px]">
-          <div className="lg:sticky lg:top-8">
-             <DashboardSidebar 
-               payments={recentPayments} 
-               registrations={activeRegistrations} 
-             />
-          </div>
+          <DashboardSidebar
+            payments={recentPayments}
+            registrations={activeRegistrations}
+          />
         </aside>
 
       </div>

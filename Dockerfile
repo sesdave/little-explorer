@@ -21,9 +21,12 @@ COPY app/portal-ui ./app/portal-ui
 
 # Build-time env (Vite only reads at build time)
 ARG VITE_API_URL
+ARG VITE_PAYSTACK_PUBLIC_KEY
 
 # IMPORTANT FIX: ensure env is available during build execution
-RUN VITE_API_URL=$VITE_API_URL npm run build -w portal-ui
+RUN VITE_API_URL=$VITE_API_URL \
+    VITE_PAYSTACK_PUBLIC_KEY=$VITE_PAYSTACK_PUBLIC_KEY \
+    npm run build -w portal-ui
 
 
 # -----------------------------

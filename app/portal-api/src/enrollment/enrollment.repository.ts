@@ -94,6 +94,32 @@ async secureBatchRegistration(applicationId: string, placements: { childId: stri
     return application;
   }
 
+  async findPendingApplication(userId: string, sessionId: string) {
+    return await this.prisma.application.findFirst({
+      where: {
+        parentId: userId,
+        sessionId,
+        status: 'PENDING',
+      },
+      include: {
+        payments: true,
+        registrations: true,
+      },
+    });
+  }
+
+  async findApplicationById(id: string) {
+    return await this.prisma.application.findFirst({
+      where: {
+        id,
+      },
+      include: {
+        payments: true,
+        registrations: true,
+      },
+    });
+  }
+
   /**
    * Atomic Transaction to secure spots for multiple children
    */

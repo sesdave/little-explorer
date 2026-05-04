@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
-  // add other variables here as you create them
+  readonly VITE_PAYSTACK_PUBLIC_KEY: string;
 }
 
 interface ImportMeta {
