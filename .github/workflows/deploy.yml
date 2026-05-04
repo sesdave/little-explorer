@@ -44,6 +44,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       # 4. Deploy to EC2
+            # 4. Deploy to EC2 via SSH
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -52,6 +53,40 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
+
+            echo "Installing Nginx + Certbot (safe - only installs if missing)..."
+            sudo dnf install -y nginx certbot python3-certbot-nginx || true
+
+            sudo systemctl enable nginx
+            sudo systemctl start nginx
+
+            echo "Configuring Nginx reverse proxy..."
+
+            sudo tee /etc/nginx/conf.d/little-explorer.conf > /dev/null <<EOF
+            server {
+                listen 80;
+                server_name imaag.it.com;
+
+                location / {
+                    proxy_pass http://localhost:4000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
+            }
+            EOF
+
+            sudo nginx -t && sudo systemctl reload nginx
+
+            echo "Checking SSL certificate..."
+            if [ ! -d "/etc/letsencrypt/live/imaag.it.com" ]; then
+              echo "Issuing SSL certificate..."
+              sudo certbot --nginx -d imaag.it.com --non-interactive --agree-tos -m your-email@example.com
+            else
+              echo "SSL already exists"
+            fi
 
             echo "Logging into ECR..."
             aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 339713127263.dkr.ecr.us-west-1.amazonaws.com
@@ -65,7 +100,7 @@ jobs:
             echo "Starting new container..."
             docker run -d \
               --name little-explorer \
-              -p 80:4000 \
+              -p 4000:4000 \
               --restart always \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
@@ -79,10 +114,13 @@ jobs:
               -e TWILIO_PHONE_NUMBER="${{ secrets.TWILIO_PHONE_NUMBER }}" \
               -e VITE_PAYSTACK_PUBLIC_KEY="${{ secrets.VITE_PAYSTACK_PUBLIC_KEY }}" \
               -e FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
-              339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest  
+              339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest
 
             echo "Running migrations..."
             docker run --rm \
-                    --env DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-                    339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest \
-                    npx prisma migrate deploy
+              --env DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              339713127263.dkr.ecr.us-west-1.amazonaws.com/little-explorer-repo:latest \
+              npx prisma migrate deploy
+
+            echo "Reloading Nginx..."
+            sudo systemctl reload nginx
