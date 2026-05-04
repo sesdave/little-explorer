@@ -62,7 +62,7 @@ jobs:
 
             echo "Configuring Nginx reverse proxy..."
 
-            sudo tee /etc/nginx/conf.d/little-explorer.conf > /dev/null <<EOF
+            sudo tee /etc/nginx/conf.d/little-explorer.conf > /dev/null <<'EOF'
             server {
                 listen 80;
                 server_name imaag.it.com;
