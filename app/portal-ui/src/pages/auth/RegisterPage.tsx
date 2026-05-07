@@ -1,6 +1,6 @@
 // src/pages/auth/RegisterPage.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   Link,
@@ -29,11 +29,62 @@ import { useAuthStore } from '@/store/auth.store';
 import { useNotificationStore } from '@/store/notification.store';
 
 import api from '@/services/api';
+import { VerificationGate } from '@/components/auth/VerificationGate';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
 
-  const { setAuth } = useAuthStore();
+  const { user, setAuth } = useAuthStore();
+
+  const [isResending, setIsResending] =
+  useState(false);
+
+const [cooldown, setCooldown] =
+  useState(0);
+
+  const handleResend = async () => {
+      if (!user?.email) return;
+
+      if (cooldown > 0) return;
+
+      try {
+        setIsResending(true);
+
+        await api.post(
+          '/v1/auth/resend-verification',
+          {
+            email: user.email,
+          },
+        );
+
+        showNotification(
+          'Verification email sent',
+          'success',
+        );
+
+        setCooldown(120);
+
+        const timer = setInterval(() => {
+          setCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+
+            return prev - 1;
+          });
+        }, 1000);
+
+      } catch (error: any) {
+        showNotification(
+          error.response?.data?.message ||
+            'Failed to resend verification email',
+          'error',
+        );
+      } finally {
+        setIsResending(false);
+      }
+    };
 
   const showNotification =
     useNotificationStore(
@@ -71,12 +122,26 @@ export const RegisterPage = () => {
     values: RegisterFormValues,
   ) => {
     try {
+      const payload = {
+        ...values,
+        role: 'PARENT',
+
+        whatsappNumber:
+          values.whatsappNumber || null,
+
+        phoneNumber:
+          values.phoneNumber || null,
+
+        church:
+          values.church || null,
+
+        address:
+          values.address || null,
+      };
+
       const { data } = await api.post(
         '/v1/auth/register',
-        {
-          ...values,
-          role: 'PARENT',
-        },
+        payload,
       );
 
       setAuth(
@@ -84,14 +149,66 @@ export const RegisterPage = () => {
         data.access_token,
       );
 
+      // ✅ SUCCESS NOTIFICATION
       showNotification(
-        'Adventure started! Welcome.',
+        data.user?.isEmailVerified
+          ? 'Adventure started! Welcome.'
+          : 'Account created. Please verify your email.',
         'success',
       );
+
+      // ✅ HANDLE EMAIL VERIFICATION FLOW
+      if (!data.user?.isEmailVerified) {
+        return;
+      }
+
+      // ✅ REDIRECT AFTER SUCCESS
+      navigate('/dashboard');
+
     } catch (error: any) {
-      const message =
-        error.response?.data?.message ||
+      console.error(
+        'Registration failed',
+        error,
+      );
+
+      // ✅ SMART ERROR HANDLING
+      const backendMessage =
+        error.response?.data?.message;
+
+      let message =
         'Registration failed';
+
+      // Prisma duplicate email
+      if (
+        backendMessage?.includes(
+          'already exists',
+        )
+      ) {
+        message =
+          'An account with this email already exists.';
+      }
+
+      // Verification-specific response
+      else if (
+        backendMessage?.includes(
+          'verify',
+        )
+      ) {
+        message =
+          'Please verify your email before logging in.';
+      }
+
+      // Validation array support
+      else if (
+        Array.isArray(backendMessage)
+      ) {
+        message =
+          backendMessage[0];
+      }
+
+      else if (backendMessage) {
+        message = backendMessage;
+      }
 
       showNotification(
         message,
@@ -100,6 +217,20 @@ export const RegisterPage = () => {
     }
   };
 
+  if (
+    user &&
+    !user.isEmailVerified
+  ) {
+    return (
+      <VerificationGate
+        email={user.email}
+        cooldown={cooldown}
+        isResending={isResending}
+        onBack={() => navigate('/login')}
+        onResend={handleResend}
+      />
+    );
+  }
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6 lg:p-10">
 
