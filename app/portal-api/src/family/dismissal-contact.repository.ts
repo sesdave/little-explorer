@@ -36,7 +36,7 @@ export class DismissalContactRepository {
     return this.prisma.dismissalContact.update({
       where: {
         id,
-        parentId,
+        userId: parentId,
       },
       data,
     });
@@ -46,7 +46,7 @@ export class DismissalContactRepository {
     return this.prisma.dismissalContact.delete({
       where: {
         id,
-        parentId,
+        userId: parentId,
       },
     });
   }

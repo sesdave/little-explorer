@@ -1,10 +1,13 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
 import { LogOut, User as UserIcon } from 'lucide-react';
+import { useState } from 'react';
 
 export const ParentPortalLayout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] =
+  useState(false);
 
   const handleLogout = () => {
     logout();
@@ -37,24 +40,71 @@ export const ParentPortalLayout = () => {
             </div>
 
             {/* Profile Avatar & Dropdown Placeholder */}
-            <div className="group relative">
-              <div className="w-12 h-12 bg-sky-100 rounded-2xl border-4 border-white shadow-sm flex items-center justify-center text-sky-600 font-bold cursor-pointer group-hover:bg-sky-200 transition-colors">
-                {user?.name?.[0] || <UserIcon size={20} />}
-              </div>
+            {/* Profile Avatar & Menu */}
+          <div className="relative">
+            <button
+              onClick={() =>
+                setMenuOpen((prev) => !prev)
+              }
+              className="
+                w-12 h-12 bg-sky-100 rounded-2xl
+                border-4 border-white shadow-sm
+                flex items-center justify-center
+                text-sky-600 font-bold
+                hover:bg-sky-200 transition-colors
+              "
+            >
+              {user?.name?.[0] || (
+                <UserIcon size={20} />
+              )}
+            </button>
 
-              {/* Simple Tooltip/Menu on Hover */}
-              <div className="absolute right-0 top-full pt-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0">
-                <div className="bg-white border-2 border-slate-900 rounded-2xl p-2 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] min-w-[160px]">
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 p-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors"
-                  >
-                    <LogOut size={18} />
-                    Logout
-                  </button>
+            {/* MENU */}
+            <div
+              className={`
+                absolute right-0 top-full pt-2
+                transition-all duration-200 z-50
+
+                ${
+                  menuOpen
+                    ? 'opacity-100 translate-y-0 pointer-events-auto'
+                    : 'opacity-0 translate-y-2 pointer-events-none'
+                }
+              `}
+            >
+              <div
+                className="
+                  bg-white border-2 border-slate-900
+                  rounded-2xl p-2
+                  shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
+                  min-w-[180px]
+                "
+              >
+                <div className="px-3 py-2 border-b border-slate-100 sm:hidden">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Parent Portal
+                  </p>
+
+                  <p className="text-sm font-bold text-slate-700 truncate">
+                    {user?.name || 'Explorer Parent'}
+                  </p>
                 </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="
+                    w-full flex items-center gap-2
+                    p-3 text-red-500 font-bold
+                    hover:bg-red-50 rounded-xl
+                    transition-colors
+                  "
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </header>
