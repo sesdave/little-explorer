@@ -16,4 +16,20 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+   @IsOptional()
+  @IsString()
+  whatsappNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  affiliatedChurch?: string;
+
+  @IsOptional()
+  @IsString()
+  homeAddress?: string;
 }

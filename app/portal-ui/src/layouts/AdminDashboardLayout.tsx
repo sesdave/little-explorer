@@ -6,7 +6,8 @@ import {
   Users, 
   BarChart3, 
   Settings, 
-  Activity 
+  Activity, 
+  LayoutGrid
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 export const AdminDashboardLayout = () => {
@@ -29,7 +30,7 @@ export const AdminDashboardLayout = () => {
               <Activity size={20} className="text-slate-900" />
             </div>
             <h1 className="text-2xl font-black uppercase italic tracking-tighter">
-              MLE <span className="text-sky-400 text-sm not-italic font-bold">Admin</span>
+              VBS <span className="text-sky-400 text-sm not-italic font-bold">Admin</span>
             </h1>
           </div>
           {/* Decorative background element */}
@@ -41,6 +42,7 @@ export const AdminDashboardLayout = () => {
           <NavItem to="/admin" icon={<LayoutDashboard size={20} />} label="Overview" end />
           <NavItem to="/admin/sessions" icon={<Calendar size={20} />} label="Sessions" />
           <NavItem to="/admin/explorers" icon={<Users size={20} />} label="Explorers" />
+          <NavItem to="/admin/classes" icon={<LayoutGrid size={20} />} label="Classes" />
           <NavItem to="/admin/revenue" icon={<BarChart3 size={20} />} label="Revenue" />
         </nav>
 

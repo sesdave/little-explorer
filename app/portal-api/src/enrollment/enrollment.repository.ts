@@ -37,36 +37,57 @@ export class EnrollmentRepository {
 
   // src/modules/enrollment/enrollment.repository.ts
 
-async secureBatchRegistration(applicationId: string, placements: { childId: string; classId: string; }[], sessionId: string) {
+async secureBatchRegistration(
+  applicationId: string,
+  placements: { childId: string; classId: string }[],
+  sessionId: string,
+) {
   return this.prisma.$transaction(async (tx) => {
-    // 1. Cleanup old provisional attempts for this specific application
-    await tx.registration.deleteMany({ where: { applicationId } });
 
     for (const placement of placements) {
-      // 2. Atomic check and increment
-      // We use a specific update filter to prevent over-subscription
-      const updatedClass = await tx.class.update({
-        where: { id: placement.classId },
-        data: { 
-          // We increment the count we track (currentCapacity or similar)
-          registrationsCount: { increment: 1 } 
-        }
-      });
 
-      // 3. Post-increment safety check
-      if (updatedClass.registrationsCount > updatedClass.capacity) {
-        throw new Error(`The class ${updatedClass.name} just filled up. Please try again.`);
+      // 🔒 STEP 1: Lock row for safe read-modify-write
+      const cls: any[] = await tx.$queryRaw`
+        SELECT id, name, capacity, "registrationsCount"
+        FROM "Class"
+        WHERE id = ${placement.classId}
+        FOR UPDATE
+      `;
+
+      const classData = cls[0];
+
+      if (!classData) {
+        throw new Error('Class not found');
       }
 
-      // 4. Link the child
+      const available =
+        classData.capacity - classData.registrationsCount;
+
+      if (available <= 0) {
+        throw new Error(
+          `Class "${classData.name}" is full. Please try another option.`,
+        );
+      }
+
+      // 🔒 STEP 2: Safe increment (inside locked row)
+      await tx.class.update({
+        where: { id: placement.classId },
+        data: {
+          registrationsCount: {
+            increment: 1,
+          },
+        },
+      });
+
+      // 🔒 STEP 3: Create registration
       await tx.registration.create({
         data: {
           applicationId,
           sessionId,
           childId: placement.childId,
           classId: placement.classId,
-          status: 'PROVISIONAL'
-        }
+          status: 'PROVISIONAL',
+        },
       });
     }
   });
@@ -109,15 +130,47 @@ async secureBatchRegistration(applicationId: string, placements: { childId: stri
   }
 
   async findApplicationById(id: string) {
-    return await this.prisma.application.findFirst({
-      where: {
-        id,
-      },
+    const application = await this.prisma.application.findFirst({
+      where: { id },
       include: {
         payments: true,
         registrations: true,
+        parent: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
       },
     });
+
+    if (!application) return null;
+
+    // 🎯 Shape response for frontend (important)
+    return {
+      ...application,
+      userEmail: application.parent.email,
+    };
+}
+
+  async findRegisteredChild(session: any, childId: string){
+    const child = await this.prisma.child.findUnique({
+        where: { id: childId },
+        include: {
+          registrations: {
+            where: {
+              sessionId: session.id,
+              status: { in: ["PROVISIONAL", "CONFIRMED"] },
+            },
+            include: {
+              class: true,
+            },
+          },
+        },
+      });
+
+      return child;
   }
 
   /**

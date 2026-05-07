@@ -3,6 +3,7 @@ import { SessionRepository } from "../session/session.repository";
 import { EnrollmentRepository } from "./enrollment.repository";
 import { BulkRegisterDto } from "./dto/bulk-register.dto";
 import { UserRepository } from "../user/user.repository";
+import { calculateAge } from "src/util/calculateAge";
 
 @Injectable()
 export class RegistrationService {
@@ -64,7 +65,7 @@ export class RegistrationService {
     return {
       applicationId: application.id,
       totalAmount,
-      currency: 'USD',
+      currency: 'NAIRA',
       message: "Spots held successfully.",
       expiresAt: new Date(Date.now() + 30 * 60000), 
     };
@@ -79,7 +80,7 @@ private calculatePlacements(
   const placements: { childId: string; classId: string }[] = [];
 
   for (const child of children) {
-    const age = this.calculateAge(new Date(child.dob));
+    const age = calculateAge(new Date(child.dob));
 
     // Find all eligible classes based on age
     const eligibleClasses = classes.filter(c => 
@@ -108,20 +109,6 @@ private calculatePlacements(
 
   return placements;
 }
-
-/**
- * Staff-Level Age Calculation
- * Calculates age based on the current year/session context
- */
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  }
 
   async findPendingApplication(id: string) {
     return await this.enrollmentRepo.findApplicationById(id);

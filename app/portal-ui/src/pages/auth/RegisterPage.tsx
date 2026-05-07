@@ -1,171 +1,307 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+// src/pages/auth/RegisterPage.tsx
+
+import React from 'react';
+
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
+
 import { Zap } from 'lucide-react';
+
+import { useForm } from 'react-hook-form';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import {
+  registerSchema,
+  RegisterFormValues,
+} from '@/schemas/register.schema';
+
 import { Button } from '@/components/ui/Button';
+
 import { Input } from '@/components/ui/Input';
+
+import { PasswordStrength } from '@/components/auth/PasswordStrength';
+
 import { useAuthStore } from '@/store/auth.store';
+
 import { useNotificationStore } from '@/store/notification.store';
-import { VerificationGate } from '@/components/auth/VerificationGate';
+
 import api from '@/services/api';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
+
   const { setAuth } = useAuthStore();
-  
-  // Form State
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
- const { user, refreshUser } = useAuthStore();
-  const [isResending, setIsResending] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
 
-  const handleResend = async () => {
-    if (!user?.email) return;
-      if (cooldown > 0) return; // Block if cooling down
-      
-      await api.post('/v1/auth/resend-verification', { email: user.email });
-      
-      setCooldown(60); // Set a 60-second wait
-      const timer = setInterval(() => {
-        setCooldown((prev) => {
-          if (prev <= 1) clearInterval(timer);
-          return prev - 1;
-        });
-      }, 1000);
-   };
+  const showNotification =
+    useNotificationStore(
+      (state) => state.show,
+    );
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: {
+      errors,
+      isSubmitting,
+    },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(
+      registerSchema,
+    ),
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const showNotification = useNotificationStore.getState().show;
-    setIsLoading(true);
-    
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      whatsappNumber: '',
+      phoneNumber: '',
+      church: '',
+      address: '',
+    },
+  });
+
+  const password = watch('password');
+
+  const onSubmit = async (
+    values: RegisterFormValues,
+  ) => {
     try {
-      // NOTE: Ensure your NestJS backend has app.enableCors() enabled!
-      const { data } = await api.post('/v1/auth/register', { name, email, password, role: 'PARENT' });
+      const { data } = await api.post(
+        '/v1/auth/register',
+        {
+          ...values,
+          role: 'PARENT',
+        },
+      );
 
-      setAuth(data.user, data.access_token);
+      setAuth(
+        data.user,
+        data.access_token,
+      );
 
-      showNotification("Adventure started! Welcome.", "success");
-        // NestJS typically returns { user, access_token }
-      
-      // const response = await fetch('http://localhost:4000/api/v1/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ 
-      //     name, 
-      //     email, 
-      //     password,
-      //     role: 'PARENT' 
-      //   }),
-      // });
-
-     // const data = await response.json();
-      //console.log("resp data", response)
-
-      // if (response.ok) {
-      //   showNotification("Adventure started! Welcome.", "success");
-      //   // NestJS typically returns { user, access_token }
-      //   setAuth(data.user, data.access_token);
-      //   // navigate('/dashboard');
-      // } else {
-      //  showNotification(data.message || "Registration failed.", "error");
-      //  // alert(data.message || "Registration failed. Try a different trail!");
-      // }
+      showNotification(
+        'Adventure started! Welcome.',
+        'success',
+      );
     } catch (error: any) {
-      console.error("Registration failed", error);
-
       const message =
         error.response?.data?.message ||
-        "Registration failed. Try a different trail!";
+        'Registration failed';
 
-      showNotification(message, "error");
-      // console.error("Connection failed", error);
-      // alert("Could not connect to the adventure server. Is the backend running?");
-    } finally {
-      setIsLoading(false);
+      showNotification(
+        message,
+        'error',
+      );
     }
   };
 
-   if (user && !user.isEmailVerified){
-    return (
-      <VerificationGate 
-        email={user?.email}
-        cooldown={cooldown}
-        isResending={isResending}
-        onBack={() => navigate('/login')}
-        onResend={handleResend}
-      />
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#FFFBE2] flex items-center justify-center p-4 md:p-10 font-medium">
-      {/* Main Card */}
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-[0.8fr_1.2fr] bg-white rounded-[2.5rem] border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] overflow-hidden">
-        
-        {/* Left Side: Brand Identity (Emerald) */}
-        <div className="bg-emerald-500 p-8 md:p-10 flex flex-col justify-center items-center text-white border-b-4 md:border-b-0 md:border-r-4 border-slate-900">
-          <div className="mb-6 rotate-3 bg-white p-5 rounded-3xl border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] text-emerald-600">
-            <Zap size={48} strokeWidth={3} fill="currentColor" />
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6 lg:p-10">
+
+      <div className="w-full max-w-6xl grid lg:grid-cols-[0.9fr_1.1fr] bg-white rounded-[2.5rem] border-4 border-slate-900 overflow-hidden shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+
+        {/* LEFT */}
+        <div className="bg-emerald-500 text-white p-10 lg:p-14 border-b-4 lg:border-b-0 lg:border-r-4 border-slate-900 flex flex-col justify-center">
+
+          <div className="w-fit bg-white text-emerald-500 p-5 rounded-[2rem] border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] mb-8">
+            <Zap
+              size={48}
+              strokeWidth={3}
+            />
           </div>
-          <h1 className="text-3xl md:text-4xl font-black italic text-center tracking-tighter leading-none">
-            Join the <br /> Journey
+
+          <h1 className="text-5xl font-black italic leading-none tracking-tight">
+            Begin the
+            <br />
+            Journey
           </h1>
-          <p className="mt-4 font-bold text-emerald-900 text-center text-sm md:text-base opacity-90 max-w-[220px]">
-            Create an account to start your family's next adventure!
+
+          <p className="mt-6 text-emerald-950 font-bold max-w-sm leading-relaxed">
+            Create your family account to
+            manage registrations, classes,
+            payments, and dismissal
+            information.
           </p>
+
+          <div className="mt-10 space-y-4">
+            {[
+              'Class Enrollment',
+              'Secure Payments',
+              'Dismissal Tracking',
+              'Parent Dashboard',
+            ].map((item) => (
+              <div
+                key={item}
+                className="bg-emerald-400/40 border border-emerald-300 rounded-2xl px-4 py-3 font-black uppercase text-xs tracking-wider"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Right Side: Registration Form */}
-        <div className="p-8 md:p-14 flex flex-col justify-center bg-white">
-          <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-8 tracking-tight">
-            Create an Account
-          </h2>
-          
-          <form onSubmit={handleRegister} className="space-y-5">
-            <Input 
-              label="Parent/Guardian Full Name" 
-              type="text" 
-              placeholder="Alex Johnson" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required 
-            />
-            
-            <Input 
-              label="Email Address" 
-              type="email" 
-              placeholder="parent@adventure.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required 
-            />
-            
-            <Input 
-              label="Choose a Password" 
-              type="password" 
-              placeholder="••••••••" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required 
-            />
+        {/* RIGHT */}
+        <div className="p-8 lg:p-14">
 
-            <Button 
+          <div className="mb-10">
+            <h2 className="text-4xl font-black text-slate-900">
+              Create Account
+            </h2>
+
+            <p className="text-slate-500 font-bold mt-2">
+              Parent/Guardian registration
+            </p>
+          </div>
+
+          <form
+            onSubmit={handleSubmit(
+              onSubmit,
+            )}
+            className="space-y-8"
+          >
+
+            {/* ACCOUNT */}
+            <section className="space-y-5">
+
+              <div>
+                <Input
+                  label="Full Name"
+                  {...register('name')}
+                />
+
+                {errors.name && (
+                  <p className="text-xs font-bold text-rose-500 mt-1">
+                    {
+                      errors.name.message
+                    }
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Input
+                  label="Email Address"
+                  type="email"
+                  {...register('email')}
+                />
+
+                {errors.email && (
+                  <p className="text-xs font-bold text-rose-500 mt-1">
+                    {
+                      errors.email
+                        .message
+                    }
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Input
+                  label="Password"
+                  type="password"
+                  {...register('password')}
+                />
+
+                {/* 👇 ONLY show when user types */}
+                {password?.length > 0 && (
+                  <div className="mt-2 transition-all duration-300">
+                    <PasswordStrength password={password} />
+                  </div>
+                )}
+
+                {errors.password && (
+                  <p className="text-xs font-bold text-rose-500 mt-2">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Input
+                  label="Confirm Password"
+                  type="password"
+                  {...register('confirmPassword')}
+                />
+
+                {errors.confirmPassword && (
+                  <p className="text-xs font-bold text-rose-500 mt-2">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {/* OPTIONAL INFO */}
+            <section className="border-t-4 border-slate-100 pt-8">
+
+              <div className="mb-5">
+                <h3 className="font-black uppercase text-sm tracking-widest">
+                  Additional Information
+                </h3>
+
+                <p className="text-xs text-slate-400 font-bold mt-1">
+                  Optional but recommended
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-5">
+
+                <Input
+                  label="WhatsApp Number"
+                  {...register(
+                    'whatsappNumber',
+                  )}
+                />
+
+                <Input
+                  label="Regular Call Number"
+                  {...register(
+                    'phoneNumber',
+                  )}
+                />
+
+                <Input
+                  label="Affiliated Church"
+                  {...register(
+                    'church',
+                  )}
+                />
+
+                <div className="md:col-span-2">
+                  <Input
+                    label="Home Address"
+                    {...register(
+                      'address',
+                    )}
+                  />
+                </div>
+              </div>
+            </section>
+
+            <Button
               type="submit"
               size="lg"
-              variant="primary"
-              isLoading={isLoading}
-              className="w-full mt-4 bg-emerald-500 hover:bg-emerald-400"
+              isLoading={isSubmitting}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-white"
             >
-              {isLoading ? "Preparing Journey..." : "Start Exploring →"}
+              Create Parent Account
             </Button>
           </form>
 
           <p className="mt-8 text-center text-sm font-bold text-slate-400 uppercase tracking-widest">
-            Already have an account? <Link to="/login" className="text-sky-500 hover:underline">Log in</Link>
+            Already registered?{' '}
+
+            <Link
+              to="/login"
+              className="text-sky-500 hover:underline"
+            >
+              Login
+            </Link>
           </p>
         </div>
       </div>

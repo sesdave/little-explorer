@@ -5,6 +5,8 @@ import { ClassBuilderPage } from '@/pages/session/ClassBuilderPage'
 import { adminDashboardLoader } from '@/loaders/admin.loader';
 import { ExplorersPage } from '@/pages/admin/ExplorersPage';
 import { explorersLoader } from '@/loaders/explorers.loader';
+import { AdminClassesPage } from '@/pages/admin/AdminClassesPage ';
+import { classLoader } from '@/loaders/class.loader';
 
 
 export const adminRoutes: RouteObject = {
@@ -29,6 +31,12 @@ export const adminRoutes: RouteObject = {
         path: 'explorers', // 👈 The route the StatCard navigates to
         element: <ExplorersPage />,
         loader: explorersLoader, // 👈 Fetches paginated data
+    },
+    {
+        path: 'classes', // 👈 The route the StatCard navigates to
+        element: <AdminClassesPage />,
+        loader: classLoader,
       },
+
   ],
 };

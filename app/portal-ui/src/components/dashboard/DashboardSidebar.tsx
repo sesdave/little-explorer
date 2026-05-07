@@ -1,7 +1,8 @@
 // apps/web/src/components/dashboard/DashboardSidebar.tsx
-import { Receipt, CreditCard, ChevronRight, Clock } from 'lucide-react';
+import { Receipt, CreditCard, ChevronRight, Clock, Pencil, Trash2, Info, ShieldCheck, Plus } from 'lucide-react';
+import { DismissalContactsCard } from './DismissalContactsCard';
 
-export const DashboardSidebar = ({ payments, registrations }: any) => {
+export const DashboardSidebar = ({ payments, registrations, dismissalContacts }: any) => {
     console.log("entered regis", registrations);
   return (
     <div className="space-y-8">
@@ -52,6 +53,9 @@ export const DashboardSidebar = ({ payments, registrations }: any) => {
           <span className="font-black text-lg text-white">{registrations || 0}</span>
         </div>
       </div>
+
+      {/* 🛡️ Dismissal Contacts */}
+       <DismissalContactsCard />
     </div>
   );
 };

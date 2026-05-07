@@ -29,9 +29,15 @@ model User {
   isEmailVerified   Boolean  @default(false)
   verificationToken String?  @unique
 
+  whatsappNumber String?
+  phoneNumber    String?
+  affiliatedChurch String?
+  homeAddress    String?
+
   // Relations
   children     Child[]
   applications Application[]
+  dismissalContacts DismissalContact[]
 }
 
 model Child {
@@ -203,4 +209,17 @@ model Payment {
   updatedAt DateTime  @updatedAt
 
   @@index([applicationId, status])
+}
+
+model DismissalContact {
+  id           String   @id @default(uuid())
+
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+
+  name         String
+  relationship String
+  phone        String?
+
+  createdAt    DateTime @default(now())
 }

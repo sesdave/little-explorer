@@ -12,19 +12,39 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
 
   const activeApplication = pendingApplication;
 
+  // 🧠 Per-child status map
+  const childStatusMap = useMemo(() => {
+    const map: Record<string, 'NOT_STARTED' | 'PENDING' | 'CONFIRMED'> = {};
+
+    children?.forEach((child: any) => {
+      const regs =
+        child.registrations?.filter(
+          (r: any) => r.sessionId === session?.id
+        ) || [];
+
+      if (!regs.length) {
+        map[child.id] = 'NOT_STARTED';
+      } else if (regs.some((r: any) => r.status === 'CONFIRMED')) {
+        map[child.id] = 'CONFIRMED';
+      } else {
+        map[child.id] = 'PENDING';
+      }
+    });
+
+    return map;
+  }, [children, session]);
+
   const needsEnrollment = useMemo(() => {
     if (!session) return false;
 
-    // No application at all → user hasn't started
-    return !activeApplication;
-  }, [session, activeApplication]);
+    return children?.some(
+      (child: any) => childStatusMap[child.id] === 'NOT_STARTED'
+    );
+  }, [children, session, childStatusMap]);
 
   const needsPayment = useMemo(() => {
     if (!activeApplication) return false;
-
-    return (
-      activeApplication.status === 'PENDING'
-    );
+    return activeApplication.status === 'PENDING';
   }, [activeApplication]);
 
   const isActive = useMemo(() => {
@@ -35,32 +55,9 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
     needsEnrollment,
     needsPayment,
     isActive,
+    childStatusMap,
     pendingApplication: activeApplication,
     activeSessionName: session?.name || 'New Season',
-    isSessionActive: !!session
+    isSessionActive: !!session,
   };
 };
-
-/*export const useEnrollmentStatus = (data: EnrollmentData) => {
-  const { children, session } = data;
-
-  const needsEnrollment = useMemo(() => {
-    // 1. If no session is active, we can't enroll anyway
-    if (!session) return false;
-
-    // 2. Check if any child lacks a confirmed registration for this session
-    // We filter for the active session ID to ensure we aren't looking at old data
-    return children?.some((child) => {
-      const activeRegs = child.registrations?.filter(
-        (reg: any) => reg.sessionId === session.id && reg.status === 'CONFIRMED'
-      );
-      return !activeRegs || activeRegs.length === 0;
-    });
-  }, [children, session]);
-
-  return {
-    needsEnrollment,
-    activeSessionName: session?.name || 'New Season',
-    isSessionActive: !!session
-  };
-};*/

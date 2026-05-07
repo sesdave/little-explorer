@@ -20,6 +20,7 @@ export const DashboardPage = () => {
     parentName,
     recentPayments,
     activeRegistrations,
+    dismissalContacts
   } = familyData;
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export const DashboardPage = () => {
     return `${names.join(', ')} and ${last}`;
   }, [children]);
 
-  const { needsEnrollment, pendingApplication } = useEnrollmentStatus({
+  const { needsEnrollment, pendingApplication, needsPayment } = useEnrollmentStatus({
     children: familyData.children,
     session: familyData.session,
     pendingApplication: familyData.pendingApplication,
@@ -64,8 +65,8 @@ export const DashboardPage = () => {
             </p>
           </div>
 
-          <div className="hidden lg:flex gap-4">
-            {pendingApplication ? (
+          <div className="flex gap-4 mt-4 lg:mt-0">
+            {needsPayment ? (
               <EnrollmentButton
                 onClick={handlePrimaryAction}
                 variant="payment"
@@ -109,6 +110,7 @@ export const DashboardPage = () => {
           <DashboardSidebar
             payments={recentPayments}
             registrations={activeRegistrations}
+            dismissalContacts={dismissalContacts}
           />
         </aside>
 

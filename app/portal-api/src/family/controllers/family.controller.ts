@@ -13,9 +13,9 @@ import {
   FileTypeValidator
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from '../auth/guard/jwt.guard';
-import { FamilyService } from './family.service';
-import { S3Service } from '../s3/s3.service';
+import { JwtAuthGuard } from '../../auth/guard/jwt.guard';
+import { FamilyService } from '../services/family.service';
+import { S3Service } from '../../s3/s3.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('family')

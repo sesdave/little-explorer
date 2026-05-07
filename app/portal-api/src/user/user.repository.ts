@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole, User } from '@prisma/client';
+import { userWithDismissalSelect } from 'src/family/dto/UserWithChildren';
 
 @Injectable()
 export class UserRepository {
@@ -116,25 +117,7 @@ async findRecentPayments(userId: string, limit: number = 5) {
 async findUserWithChildren(userId: string) {
   return this.prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      name: true,
-      email: true,
-      isEmailVerified: true,
-      children: {
-        select: { 
-          id: true, 
-          firstName: true, 
-          lastName: true, 
-          photoUrl: true, 
-          dob: true,
-          // 🏛️ ADDED: To check if a child is already enrolled in the session
-          registrations: {
-            select: { sessionId: true, status: true }
-          }
-        },
-        orderBy: { firstName: 'asc' },
-      },
-    },
+    select:  userWithDismissalSelect,
   });
 }
 }

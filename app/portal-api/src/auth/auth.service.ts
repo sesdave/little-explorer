@@ -28,6 +28,10 @@ export class AuthService {
           password: hash,
           name: dto.name,
           verificationToken,
+          whatsappNumber: dto.whatsappNumber,
+          phoneNumber: dto.phoneNumber,
+          affiliatedChurch: dto.affiliatedChurch,
+          homeAddress: dto.homeAddress,
         },
       });
       this.comms.sendVerificationEmail(user.email, verificationToken);

@@ -1,5 +1,5 @@
 // apps/web/src/pages/admin/AdminOverviewPage.tsx
-import { Users, Calendar, DollarSign, Activity, TrendingUp, ChevronRight } from 'lucide-react';
+import { Users, Calendar, DollarSign, Activity, TrendingUp, ChevronRight, Wallet } from 'lucide-react';
 import { StatCard } from '@/components/ui/StatCard';
 import { QuickActions } from '@/components/overview/QuickActions';
 import { RecentApplications } from '@/components/overview/RecentApplications'; // 👈 Make sure to import this
@@ -9,7 +9,6 @@ export const AdminOverviewPage = () => {
   // Pulling the real data from the adminDashboardLoader
   const { stats, recentApps } = useLoaderData() as any;
   const navigate = useNavigate();
-
   // Fallback if data isn't ready
   if (!stats) return (
     <div className="p-20 text-center font-black uppercase italic text-slate-400 animate-pulse">
@@ -51,10 +50,15 @@ export const AdminOverviewPage = () => {
           trend="Steady" 
           color="bg-amber-400" 
         />
+
         <StatCard 
-          icon={<DollarSign size={24} strokeWidth={3} />} 
+          icon={<Wallet size={24} strokeWidth={3} />} 
           label="Revenue (MTD)" 
-          value={`$${stats.totalRevenue.toLocaleString()}`} 
+          value={new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN',
+            maximumFractionDigits: 0,
+          }).format(stats.totalRevenue)}
           trend={stats.revenueTrend} 
           color="bg-emerald-400" 
         />

@@ -10,6 +10,8 @@ import { UserRepository } from '../user/user.repository';       // 👈 Inject U
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { SessionStatus } from '@prisma/client';
+import { EnrollmentRepository } from 'src/enrollment/enrollment.repository';
+import { ReassignDto } from './dto/reassign-class-dto';
 
 @Injectable()
 export class ClassService {
@@ -19,6 +21,7 @@ export class ClassService {
     private readonly repository: ClassRepository,
     private readonly sessionRepository: SessionRepository,
     private readonly userRepository: UserRepository,
+    private readonly enrollRepository: EnrollmentRepository,
     @Inject(CACHE_MANAGER) private readonly cache: cacheManager.Cache
   ) {}
 
@@ -95,6 +98,39 @@ export class ClassService {
     await this.validateClassBusinessRules({ ...existing, ...dto } as CreateClassDto);
 
     return this.repository.update(id, dto);
+  }
+
+  async getClassAssignments() {
+    return this.repository.getClassAssignments();
+  }
+
+  async reassignChild(dto: ReassignDto) {
+    return this.repository.reassignChild(dto);
+  }
+
+
+  async getReassignmentOptions(childId: string) {
+    const session = await this.sessionRepository.getActiveSession().catch(() => null);
+
+    if (!session) {
+      throw new NotFoundException(
+        "No active session found. Reassignment is unavailable."
+      );
+    }
+
+    const child: any = await this.enrollRepository.findRegisteredChild(session, childId);
+
+    if (!child) {
+      throw new NotFoundException("Child not found");
+     }
+
+  const currentClassId = child.registrations?.[0]?.classId;
+
+  return this.repository.getReassignmentOptions(
+      childId,
+      session.id,
+      currentClassId
+    );
   }
 
 

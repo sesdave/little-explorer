@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // Adjust path as needed
 import { Class, SessionStatus } from '@prisma/client';
 import { CloneConfigDto, CreateSessionDto } from './dto';
@@ -179,4 +179,31 @@ async findById(id: string) {
     },
   });
 }
+
+async getActiveSession() {
+    const now = new Date();
+
+    const session = await this.prisma.session.findFirst({
+      where: {
+       // status: SessionStatus.REGISTRATION_OPEN,
+        isActive: true,
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      orderBy: {
+        startDate: "desc",
+      },
+      include: {
+        classes: true,
+      },
+    });
+
+    if (!session) {
+      throw new UnprocessableEntityException(
+        "No active registration session found"
+      );
+    }
+
+    return session;
+  }
 }

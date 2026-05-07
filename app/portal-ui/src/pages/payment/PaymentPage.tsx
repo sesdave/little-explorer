@@ -16,6 +16,10 @@ export const PaymentPage = () => {
   const application = data?.application ?? data;
   const userEmail = data?.userEmail ?? data?.email ?? "sesughdtyohemba@gmail.com";
   const tamount = Number(application?.totalAmount ?? 0);
+   const formattedAmount = new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+    }).format(Number(application.totalAmount));
 
   const config = {
     reference: `explorer_${applicationId}_${new Date().getTime()}`,
@@ -75,7 +79,7 @@ export const PaymentPage = () => {
       <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-[12px_12px_0px_0px_#fda4af]">
         <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
           <p className="font-black uppercase tracking-widest text-slate-400">Amount Due</p>
-          <p className="text-3xl font-black text-rose-400">${Number(application.totalAmount).toLocaleString()}</p>
+          <p className="text-3xl font-black text-rose-400">{formattedAmount}</p>
         </div>
         <p className="text-sm text-slate-400 italic">Reference: {applicationId}</p>
       </div>
