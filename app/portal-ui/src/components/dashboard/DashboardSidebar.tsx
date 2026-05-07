@@ -1,47 +1,18 @@
 // apps/web/src/components/dashboard/DashboardSidebar.tsx
 import { Receipt, CreditCard, ChevronRight, Clock, Pencil, Trash2, Info, ShieldCheck, Plus } from 'lucide-react';
 import { DismissalContactsCard } from './DismissalContactsCard';
+import { RecentPaymentsCard } from './RecentPaymentsCard';
 
 export const DashboardSidebar = ({ payments, registrations, dismissalContacts }: any) => {
     console.log("entered regis", registrations);
   return (
     <div className="space-y-8">
       {/* 💳 Recent Transactions Section */}
-      <div className="bg-white border-4 border-slate-900 rounded-[2rem] p-6 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 bg-emerald-400 border-2 border-slate-900 rounded-lg">
-            <Receipt size={18} className="text-slate-900" />
-          </div>
-          <h3 className="font-black uppercase text-sm tracking-tight">Recent Payments</h3>
-        </div>
-
-        <div className="space-y-4">
-          {payments?.length > 0 ? (
-            payments.map((payment: any) => (
-              <div key={payment.id} className="group cursor-pointer">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-black text-xs uppercase text-slate-900">{payment.method}</p>
-                    <p className="text-[10px] font-bold text-slate-400">{new Date(payment.paidAt).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black text-xs">${Number(payment.amount).toLocaleString()}</p>
-                    <span className="text-[9px] font-black uppercase text-emerald-500">Successful</span>
-                  </div>
-                </div>
-                <div className="mt-2 h-1 w-0 group-hover:w-full bg-slate-100 transition-all duration-300" />
-              </div>
-            ))
-          ) : (
-            <p className="text-[10px] font-bold text-slate-400 uppercase italic">No transactions yet</p>
-          )}
-        </div>
-
-        <button className="w-full mt-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all">
-          View All Billing
-        </button>
-      </div>
-
+      <RecentPaymentsCard 
+      payments={payments}
+      currency="NGN"
+      />
+      
       {/* 🕒 Enrollment Status Summary */}
       <div className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
         <h3 className="font-black uppercase text-xs tracking-widest mb-4 text-sky-400">Current Status</h3>

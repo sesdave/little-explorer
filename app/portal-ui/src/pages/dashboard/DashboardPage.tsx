@@ -97,7 +97,7 @@ export const DashboardPage = () => {
             </div>
 
             <Button
-              onClick={handlePrimaryAction}
+              // onClick={handlePrimaryAction}
               className="bg-rose-400 text-white border-4 border-slate-900 px-10 py-5 text-xl font-black"
             >
                BROWSE CLASSES
