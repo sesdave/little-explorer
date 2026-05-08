@@ -101,5 +101,15 @@ export class SessionService {
     };
   }
 
+  async toggleClassVisibility(
+    sessionId: string,
+    isClassVisible: boolean,
+  ) {
+    return this.repository.updateClassVisibility(
+      sessionId,
+      isClassVisible,
+    );
+  }
+
 
 }

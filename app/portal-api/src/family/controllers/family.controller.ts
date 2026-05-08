@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../auth/guard/jwt.guard';
 import { FamilyService } from '../services/family.service';
 import { S3Service } from '../../s3/s3.service';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('family')
@@ -57,4 +58,13 @@ export class FamilyController {
       photoUrl,
     });
   }
+
+   @Get('classes')
+    async getAssignedClasses(
+      @CurrentUser('id') userId: string,
+    ) {
+      return this.familyService.getAssignedClasses(
+        userId,
+      );
+    }
 }

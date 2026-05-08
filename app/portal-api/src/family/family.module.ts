@@ -9,7 +9,8 @@ import { SessionRepository } from '../session/session.repository';
 import { EnrollmentRepository } from 'src/enrollment/enrollment.repository';
 import { DismissalContactController } from './controllers/dismissal-contact.controller';
 import { DismissalContactService } from './services/dismissal-contact.service';
-import { DismissalContactRepository } from './dismissal-contact.repository';
+import { DismissalContactRepository } from './repository/dismissal-contact.repository';
+import { FamilyRepository } from './repository/family.repository';
 
 @Module({
   imports: [AuthModule, S3Module],
@@ -21,6 +22,7 @@ import { DismissalContactRepository } from './dismissal-contact.repository';
     EnrollmentRepository,
     DismissalContactService,
     DismissalContactRepository,
+    FamilyRepository,
   ],
 })
 export class FamilyModule {}

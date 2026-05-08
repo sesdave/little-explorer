@@ -1,10 +1,10 @@
 // src/dismissal-contact/dismissal-contact.repository.ts
 
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import {
   CreateDismissalContactDto,
-} from './dto/create-dismissal-contact.dto';
+} from '../dto/create-dismissal-contact.dto';
 
 @Injectable()
 export class DismissalContactRepository {

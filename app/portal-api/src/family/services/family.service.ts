@@ -5,6 +5,7 @@ import { SessionRepository } from '../../session/session.repository';
 import { UserRepository } from '../../user/user.repository';
 import { EnrollmentRepository } from 'src/enrollment/enrollment.repository';
 import { UserWithDismissalSelect } from '../dto/UserWithChildren';
+import { FamilyRepository } from '../repository/family.repository';
 
 // 1. Define a specific type for the return data to ensure TS 
 // knows exactly what 'children' contains.
@@ -31,6 +32,7 @@ export class FamilyService {
     private readonly userRepo: UserRepository,    // 👈 Injected
     private readonly sessionRepo: SessionRepository,
     private readonly enrollmentRepo: EnrollmentRepository,
+    private readonly familyRepo: FamilyRepository,
   ) {}
 
   /**
@@ -73,6 +75,7 @@ export class FamilyService {
           id: activeSession.id,
           name: activeSession.name,
           pricePerClass: activeSession.pricePerClass,
+          isClassVisible: activeSession.isClassVisible
         }
       : null,
 
@@ -125,25 +128,46 @@ export class FamilyService {
     });
   }
 
-  private computeEnrollmentStats(
-  children:  UserWithDismissalSelect['children'],
-  sessionId?: string
-) {
-  if (!sessionId) {
-    return { confirmed: 0, provisional: 0 };
+  async getAssignedClasses(
+    userId: string,
+  ) {
+    const activeSession =
+      await this.sessionRepo.getActiveSession()
+
+    if (!activeSession) {
+      throw new NotFoundException(
+        'No active session found',
+      );
+    }
+
+    const children =
+      await this.familyRepo.getAssignedClasses(userId, activeSession.id)
+
+    return {
+      session: activeSession,
+      children,
+    };
   }
 
-  return children.reduce(
-    (acc, child) => {
-      for (const reg of child.registrations) {
-        if (reg.sessionId !== sessionId) continue;
+  private computeEnrollmentStats(
+    children:  UserWithDismissalSelect['children'],
+    sessionId?: string
+  ) {
+    if (!sessionId) {
+      return { confirmed: 0, provisional: 0 };
+    }
 
-        if (reg.status === 'CONFIRMED') acc.confirmed++;
-        else if (reg.status === 'PROVISIONAL') acc.provisional++;
-      }
-      return acc;
-    },
-    { confirmed: 0, provisional: 0 }
-  );
-}
+    return children.reduce(
+      (acc, child) => {
+        for (const reg of child.registrations) {
+          if (reg.sessionId !== sessionId) continue;
+
+          if (reg.status === 'CONFIRMED') acc.confirmed++;
+          else if (reg.status === 'PROVISIONAL') acc.provisional++;
+        }
+        return acc;
+      },
+      { confirmed: 0, provisional: 0 }
+    );
+  }
 }

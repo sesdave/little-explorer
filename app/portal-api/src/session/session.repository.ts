@@ -149,6 +149,7 @@ async findById(id: string) {
         name: true,
         status: true,
         pricePerClass: true,
+        isClassVisible: true,
         classes: {
           select: {
             id: true,
@@ -197,6 +198,7 @@ async getActiveSession() {
         classes: true,
       },
     });
+    console.log("sessio", session)
 
     if (!session) {
       throw new UnprocessableEntityException(
@@ -205,5 +207,19 @@ async getActiveSession() {
     }
 
     return session;
+  }
+
+  async updateClassVisibility(
+    sessionId: string,
+    isClassVisible: boolean,
+  ) {
+    return this.prisma.session.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        isClassVisible,
+      },
+    });
   }
 }

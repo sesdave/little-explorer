@@ -4,5 +4,6 @@ import api from "@/services/api";
 export const classLoader = async () => {
 
   const response = await api.get(`/v1/admin/classes/assignments`);
+  console.log("return", response);
   return response.data; 
 };

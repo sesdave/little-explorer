@@ -6,6 +6,7 @@ import { getFamilyDashboardData } from '../services/family.service';
 import { PaymentPage } from '@/pages/payment/PaymentPage';
 import { PaymentVerifying } from '@/pages/payment/PaymentVerifying';
 import api from '@/services/api';
+import { AssignedClassesPage } from '@/components/dashboard/AssignedClassesPage ';
 
 export const parentRoutes: RouteObject = {
   path: '/dashboard', // 👈 ADD THE SLASH HERE
@@ -36,6 +37,10 @@ export const parentRoutes: RouteObject = {
     {
       path: 'payment/verifying',
       element: <PaymentVerifying />,
+    },
+     {
+      path: 'classes',
+      element: <AssignedClassesPage />,
     },
   ]
 };

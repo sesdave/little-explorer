@@ -1,7 +1,8 @@
 import { useLoaderData } from 'react-router-dom';
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { ReassignModal } from '@/components/admin/ReassignModal';
+import { useToggleClassVisibility } from '@/hooks/useToggleClassVisibility';
 
 type Child = {
   childId: string;
@@ -19,8 +20,14 @@ type ClassItem = {
   children: Child[];
 };
 
+type SessionItem = {
+    id: string;
+    isClassVisible: boolean;
+}
+
 export const AdminClassesPage = () => {
-  const { classes } = useLoaderData() as { classes: ClassItem[] };
+  const { classes, session } = useLoaderData() as { classes: ClassItem[], session:SessionItem };
+  const [isClassVisible, setIsClassVisible] = useState(session.isClassVisible);
 
   const [openClassId, setOpenClassId] = useState<string | null>(null);
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
@@ -28,18 +35,87 @@ export const AdminClassesPage = () => {
   const toggle = (id: string) => {
     setOpenClassId((prev) => (prev === id ? null : id));
   };
+  const toggleVisibilityMutation = useToggleClassVisibility(session.id,);
+
+  const handleToggleVisibility = () => {
+    const nextValue = !isClassVisible;
+
+    // optimistic update
+    setIsClassVisible(nextValue);
+
+    toggleVisibilityMutation.mutate(
+      nextValue,
+      {
+        onError: () => {
+          // rollback
+          setIsClassVisible(
+            !nextValue,
+          );
+        },
+      },
+    );
+  };
+  useEffect(() => {
+  setIsClassVisible(
+    session.isClassVisible,
+  );
+}, [session.isClassVisible]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
 
       {/* HEADER */}
-      <header className="bg-white p-6 rounded-[2rem] border-4 border-slate-900 shadow-[6px_6px_0px_0px_#0f172a]">
+      <header
+          className="
+            bg-white p-6 rounded-[2rem]
+            border-4 border-slate-900
+            shadow-[6px_6px_0px_0px_#0f172a]
+            flex flex-col lg:flex-row
+            lg:items-center lg:justify-between
+            gap-6
+          "
+        >
+             <div>
         <h1 className="text-3xl font-black uppercase italic text-slate-900">
           Class Management
         </h1>
         <p className="text-slate-500 font-bold text-sm mt-1">
           View and reassign children across classes
         </p>
+        </div>
+        {/* VISIBILITY TOGGLE */}
+        <button
+          onClick={handleToggleVisibility}
+          disabled={
+            toggleVisibilityMutation.isPending
+          }
+          className={`
+            flex items-center gap-3
+            px-5 py-4 rounded-2xl
+            border-4 border-slate-900
+            font-black uppercase text-xs
+            shadow-[4px_4px_0px_0px_#0f172a]
+            transition-all
+
+            ${
+              isClassVisible
+                ? 'bg-emerald-400 text-slate-900'
+                : 'bg-rose-400 text-white'
+            }
+          `}
+        >
+          {isClassVisible ? (
+            <>
+              <Eye size={18} />
+              Classes Visible
+            </>
+          ) : (
+            <>
+              <EyeOff size={18} />
+              Classes Hidden
+            </>
+          )}
+        </button>
       </header>
 
       {/* CLASS LIST */}

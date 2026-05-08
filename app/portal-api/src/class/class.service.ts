@@ -101,7 +101,19 @@ export class ClassService {
   }
 
   async getClassAssignments() {
-    return this.repository.getClassAssignments();
+    const session = await this.sessionRepository.getActiveSession().catch(() => null);
+    console.log("sessioj", session)
+
+    if (!session) {
+      throw new NotFoundException(
+        "No active session found. Reassignment is unavailable."
+      );
+    }
+    const classes = await this.repository.getClassAssignments(session.id);
+    return{
+      session,
+      classes
+    }
   }
 
   async reassignChild(dto: ReassignDto) {

@@ -50,19 +50,11 @@ async findById(id: string) {
   return this.prisma.class.findUnique({ where: { id } });
 }
 
-async getClassAssignments() {
-  const activeSession = await this.prisma.session.findFirst({
-    where: { isActive: true },
-    select: { id: true, name: true },
-  });
-
-  if (!activeSession) {
-    return { classes: [], session: null };
-  }
+async getClassAssignments(sessionId: string) {
 
   const classes = await this.prisma.class.findMany({
     where: {
-      sessionId: activeSession.id,   // ✅ FIX
+      sessionId,   // ✅ FIX
       isVisible: true,
     },
     include: {
@@ -75,9 +67,7 @@ async getClassAssignments() {
     orderBy: { name: 'asc' },
   });
 
-  return {
-    session: activeSession,
-    classes: classes.map((c) => ({
+  return classes.map((c) => ({
       id: c.id,
       name: c.name,
       capacity: c.capacity,
@@ -87,8 +77,7 @@ async getClassAssignments() {
         name: `${r.child.firstName} ${r.child.lastName}`,
         status: r.status,
       })),
-    })),
-  };
+    }));
 }
 
 /*async reassignChild(dto: {

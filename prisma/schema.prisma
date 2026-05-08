@@ -67,6 +67,7 @@ model Session {
   status        SessionStatus  @default(DRAFT)
   startDate     DateTime
   endDate       DateTime
+  isClassVisible Boolean       @default(false)
   isActive      Boolean        @default(false)
   classes       Class[]
   registrations Registration[]

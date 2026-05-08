@@ -1,6 +1,6 @@
 import { 
   Controller, Post, Get, Body, Param, 
-  UseGuards, ParseUUIDPipe 
+  UseGuards, ParseUUIDPipe, Patch,
 } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { JwtAuthGuard, RolesGuard } from '../auth/guard';
@@ -49,5 +49,17 @@ export class SessionController {
   @Get(':sessionId/classes')
   async getSessionClasses(@Param('sessionId', ParseUUIDPipe) sessionId: string) {
     return this.sessionService.findClassesBySession(sessionId);
+  }
+
+  @Patch(':id/class-visibility')
+  @Roles(UserRole.ADMIN)
+  async updateClassVisibility(
+    @Param('id') id: string,
+    @Body() body: { isClassVisible: boolean },
+  ) {
+    return this.sessionService.toggleClassVisibility(
+      id,
+      body.isClassVisible,
+    );
   }
 }

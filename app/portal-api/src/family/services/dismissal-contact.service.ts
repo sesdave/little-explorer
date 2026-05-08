@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateDismissalContactDto } from '../dto/create-dismissal-contact.dto';
 import { UpdateDismissalContactDto } from '../dto/update-dismissal-contact.dto';
-import { DismissalContactRepository } from '../dismissal-contact.repository';
+import { DismissalContactRepository } from '../repository/dismissal-contact.repository';
 
 
 @Injectable()
