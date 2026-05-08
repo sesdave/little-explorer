@@ -119,7 +119,6 @@ export class AuthService {
       }
     });
 
-    // ✅ RETURN TOKEN
     return this.signToken(
       updatedUser.id,
       updatedUser.email,
