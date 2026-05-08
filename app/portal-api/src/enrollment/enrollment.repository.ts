@@ -17,7 +17,9 @@ export class EnrollmentRepository {
       where: { 
         parentId: userId, 
         sessionId, 
-        status: 'PENDING' 
+        status: {
+          in: ['PENDING', 'PARTIALLY_PAID'],
+        }
       }
     });
 
@@ -42,7 +44,30 @@ async secureBatchRegistration(
   placements: { childId: string; classId: string }[],
   sessionId: string,
 ) {
+  
   return this.prisma.$transaction(async (tx) => {
+
+  const existingRegistrations =
+    await tx.registration.findMany({
+      where: { applicationId },
+    });
+
+    for (const reg of existingRegistrations) {
+      await tx.class.update({
+        where: {
+          id: reg.classId,
+        },
+        data: {
+          registrationsCount: {
+            decrement: 1,
+          },
+        },
+      });
+    }
+
+    await tx.registration.deleteMany({
+      where: { applicationId },
+    });
 
     for (const placement of placements) {
 
@@ -93,6 +118,86 @@ async secureBatchRegistration(
   });
 }
 
+async markApplicationCompleted(
+  applicationId: string,
+  tx?: any,
+) {
+  const client = tx || this.prisma;
+
+  return client.application.update({
+    where: {
+      id: applicationId,
+    },
+    data: {
+      status: 'COMPLETED',
+    },
+  });
+}
+
+async markApplicationPartiallyPaid(
+  applicationId: string,
+  tx?: any,
+) {
+  const client = tx || this.prisma;
+
+  return client.application.update({
+    where: {
+      id: applicationId,
+    },
+    data: {
+      status: 'PARTIALLY_PAID',
+    },
+  });
+}
+
+async markApplicationPending(
+  applicationId: string,
+  tx?: any,
+) {
+  const client = tx || this.prisma;
+
+  return client.application.update({
+    where: {
+      id: applicationId,
+    },
+    data: {
+      status: 'PENDING',
+    },
+  });
+}
+
+async confirmRegistrations(
+  applicationId: string,
+  tx?: any,
+) {
+  const client = tx || this.prisma;
+
+  return client.registration.updateMany({
+    where: {
+      applicationId,
+    },
+    data: {
+      status: 'CONFIRMED',
+    },
+  });
+}
+
+async revertRegistrationsToProvisional(
+  applicationId: string,
+  tx?: any,
+) {
+  const client = tx || this.prisma;
+
+  return client.registration.updateMany({
+    where: {
+      applicationId,
+    },
+    data: {
+      status: 'PROVISIONAL',
+    },
+  });
+}
+
 /**
    * Transitions an application and its registrations to confirmed status.
    * Accept an optional transaction client to maintain atomicity.
@@ -120,7 +225,9 @@ async secureBatchRegistration(
       where: {
         parentId: userId,
         sessionId,
-        status: 'PENDING',
+        status: {
+          in: ['PENDING', 'PARTIALLY_PAID'],
+        },
       },
       include: {
         payments: true,

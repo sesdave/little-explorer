@@ -1,58 +1,108 @@
-// src/modules/payment/payment.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+
 import * as crypto from 'crypto';
 import { PaymentRepository } from './payment.repository';
 
 @Injectable()
 export class PaymentService {
-    constructor(private readonly paymentRepo: PaymentRepository) {}
-  
-    verifyPaystackSignature(payload: any, signature: string): boolean {
-        const secret = process.env.PAYSTACK_SECRET_KEY;
+  constructor(
+    private readonly paymentRepo: PaymentRepository,
+  ) {}
 
-        if (!secret) {
-            throw new Error('PAYSTACK_SECRET_KEY is not defined in environment variables');
-        }
-        
-        // Create a HMAC SHA512 hash of the raw body
-        const hash = crypto
-        .createHmac('sha512', secret)
-        .update(JSON.stringify(payload))
-        .digest('hex');
+  verifyPaystackSignature(
+    payload: any,
+    signature: string,
+  ): boolean {
+    const secret =
+      process.env.PAYSTACK_SECRET_KEY;
 
-        // Securely compare the hashes to prevent timing attacks
-        return hash === signature;
+    if (!secret) {
+      throw new Error(
+        'PAYSTACK_SECRET_KEY missing',
+      );
     }
 
-    // src/modules/payment/payment.service.ts
+    const hash = crypto
+      .createHmac('sha512', secret)
+      .update(JSON.stringify(payload))
+      .digest('hex');
 
-        async handlePaystackWebhook(payload: any, signature: string) {
-        // 1. Verify Paystack Signature (Crucial for Security)
-            const isValid = this.verifyPaystackSignature(payload, signature);
-            if (!isValid) throw new UnauthorizedException();
+    return hash === signature;
+  }
 
-            const { event, data } = payload;
+  async handlePaystackWebhook(
+    payload: any,
+    signature: string,
+  ) {
+    const isValid =
+      this.verifyPaystackSignature(
+        payload,
+        signature,
+      );
 
-            if (event === 'charge.success') {
-                const applicationId = data.metadata.applicationId;
-
-                // 🏛️ Clean call to the repository
-                await this.paymentRepo.fulfillApplicationPayment({
-                    applicationId,
-                    amount: data.amount / 100, // Convert Kobo to Currency
-                    reference: data.reference,
-                });
-
-                // After DB is updated, you can safely trigger side effects
-                // this.emailService.sendConfirmation(applicationId);
-            }
-        }
-
-        /**
-     * Used by the controller to answer the frontend's "Verifying..." screen
-     */
-    async getStatusByReference(reference: string) {
-        const payment = await this.paymentRepo.findPaymentByReference(reference);
-        return payment?.status || 'PENDING';
+    if (!isValid) {
+      throw new UnauthorizedException();
     }
+
+    const { event, data } = payload;
+
+    // Ignore non-success events
+    if (
+      event !== 'charge.success' ||
+      data.status !== 'success'
+    ) {
+      return;
+    }
+
+    const applicationId =
+      data.metadata?.applicationId;
+
+    if (!applicationId) {
+      throw new Error(
+        'Missing applicationId metadata',
+      );
+    }
+
+    // Idempotency protection
+    const existing =
+      await this.paymentRepo.findPaymentByReference(
+        data.reference,
+      );
+
+    if (existing) {
+      return existing;
+    }
+
+    // Record payment
+    await this.paymentRepo.createSuccessfulPayment({
+      applicationId,
+      amount: data.amount / 100,
+      reference: data.reference,
+      currency: data.currency,
+      method: 'PAYSTACK',
+    });
+
+    // Recalculate balances + update statuses
+    await this.paymentRepo.updateApplicationBalances(
+      applicationId,
+    );
+
+    return {
+      success: true,
+    };
+  }
+
+  async getStatusByReference(
+    reference: string,
+  ) {
+    const payment =
+      await this.paymentRepo.findPaymentByReference(
+        reference,
+      );
+
+    return payment?.status || 'PENDING';
+  }
 }

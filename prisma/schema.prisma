@@ -91,7 +91,7 @@ model Class {
   // 🔗 Lineage tracking: Keeps track of which class this was cloned from
   clonedFromId String?
   isVisible    Boolean @default(true)
-  price        Float?
+  price        Decimal? @db.Decimal(10,2)
 
   // 👥 Text Array Optimization
   instructorIds String[] // Array of User UUIDs
@@ -114,6 +114,7 @@ model Class {
 enum ApplicationStatus {
   PENDING // Created, but payment not confirmed
   COMPLETED // Payment successful, spot confirmed
+  PARTIALLY_PAID
   EXPIRED // Time-to-pay exceeded, spot released
   CANCELLED // Manually retracted by parent/admin
 }
@@ -141,6 +142,9 @@ model Application {
   // Track total amounts at the time of creation
   totalAmount Decimal @db.Decimal(10, 2)
 
+  amountPaid Decimal @default(0) @db.Decimal(10,2)
+  balanceDue Decimal @default(0) @db.Decimal(10,2)
+
   registrations Registration[]
   payments      Payment[]
 
@@ -166,11 +170,16 @@ model Registration {
   class   Class  @relation(fields: [classId], references: [id])
 
   // Specific status for individual child placement
-  status String @default("PROVISIONAL") // PROVISIONAL | CONFIRMED
+  status RegistrationStatus @default(PROVISIONAL)
 
   createdAt DateTime @default(now())
 
   @@unique([childId, classId, applicationId]) // Prevent duplicate placement in same app
+}
+
+enum RegistrationStatus{
+  PROVISIONAL
+  CONFIRMED
 }
 
 enum PaymentStatus {
