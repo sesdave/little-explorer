@@ -44,7 +44,7 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
 
   const needsPayment = useMemo(() => {
     if (!activeApplication) return false;
-    return activeApplication.status === 'PENDING';
+    return ['PENDING', 'PARTIALLY_PAID'].includes(activeApplication.status);
   }, [activeApplication]);
 
   const isActive = useMemo(() => {
