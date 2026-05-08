@@ -2,6 +2,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import twilio from 'twilio';
 import sgMail from '@sendgrid/mail';
+import { verificationEmailTemplate } from './templates/verification-email.template';
 
 @Injectable()
 export class CommunicationService {
@@ -37,8 +38,24 @@ export class CommunicationService {
     // this.twilioClient = twilio(twilioSid, twilioAuthToken);
     // sgMail.setApiKey(sendGridKey);
   }
+  async sendVerificationEmail(email: string, token: string, name: string) {
+    const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
-  async sendVerificationEmail(email: string, token: string) {
+    if (!this.sendgridEnabled) {
+      this.logger.log(`[MOCK EMAIL] → ${email}: ${url}`);
+      return;
+    }
+
+    const msg = {
+      to: email,
+      from: 'sesughdtyohemba@gmail.com',
+      subject: 'Verify your Explorer Account',
+      html: verificationEmailTemplate(url, name), // 👈 clean separation
+    };
+
+    await sgMail.send(msg);
+  }
+  /*async sendVerificationEmail(email: string, token: string) {
     const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
     if (!this.sendgridEnabled) {
       this.logger.log(`[MOCK EMAIL] → ${email}: ${url}`);
@@ -63,5 +80,5 @@ export class CommunicationService {
         console.error("An unexpected error occurred:", error);
       }
     }
-  }
+  }*/
 }
