@@ -34,9 +34,9 @@ export class AuthService {
           homeAddress: dto.homeAddress,
         },
       });
-      this.comms.sendVerificationEmail(user.email, verificationToken, dto.name);
+      this.comms.sendVerificationEmail(user.email, verificationToken);
 
-      return this.signToken(user.id, user.email, user.role, user.isEmailVerified, user.name);
+      return this.signToken(user.id, user.email, user.role, user.isEmailVerified);
     } catch (error) {
       // 2. Change 'Prisma.PrismaClientKnownRequestError' to just 'PrismaClientKnownRequestError'
       // if the namespace check still fails, otherwise ensure npx prisma generate was run.
@@ -58,7 +58,6 @@ export class AuthService {
             this.comms.sendVerificationEmail(
               existingUser.email,
               verificationToken,
-              existingUser.name
             );
 
             return {
@@ -88,10 +87,10 @@ export class AuthService {
     const pwMatches = await bcrypt.compare(dto.password, user.password);
     if (!pwMatches) throw new ForbiddenException('Access Denied');
 
-    return this.signToken(user.id, user.email, user.role, user.isEmailVerified, user.name );
+    return this.signToken(user.id, user.email, user.role, user.isEmailVerified);
   }
 
- async signToken(userId: string, email: string, role: string, isEmailVerified: boolean, name: string) {
+ async signToken(userId: string, email: string, role: string, isEmailVerified: boolean) {
   const payload = { sub: userId, email, role };
   const token = await this.jwt.signAsync(payload, {
     expiresIn: '7d', // Changed to 7d to match your AuthModule config
@@ -100,7 +99,7 @@ export class AuthService {
 
   return { 
     access_token: token,
-    user: { id: userId, email, role, isEmailVerified, name } // 👈 Add this for your frontend
+    user: { id: userId, email, role, isEmailVerified } // 👈 Add this for your frontend
   };
 }
 
@@ -119,12 +118,12 @@ export class AuthService {
       }
     });
 
+    // ✅ RETURN TOKEN
     return this.signToken(
       updatedUser.id,
       updatedUser.email,
       updatedUser.role,
-      updatedUser.isEmailVerified,
-      updatedUser.name
+      updatedUser.isEmailVerified
     );
   }
 
@@ -153,7 +152,7 @@ export class AuthService {
     // 4. Dispatch the email (SendGrid)
     // We don't necessarily need to 'await' this if we want a faster response,
     // but awaiting ensures the user knows if the email provider failed.
-    this.comms.sendVerificationEmail(user.email, verificationToken, user.name);
+    this.comms.sendVerificationEmail(user.email, verificationToken);
 
 
     return { message: 'Verification link resent successfully.' };
