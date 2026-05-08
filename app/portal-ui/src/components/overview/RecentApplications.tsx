@@ -27,7 +27,7 @@ export const RecentApplications = ({
 
     <div className="space-y-4">
       {applications
-        ?.slice(0, 3)
+        ?.slice(0, 2)
         .map((app: any) => (
           <div
             key={app.id}
