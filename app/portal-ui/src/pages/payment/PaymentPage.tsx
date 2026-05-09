@@ -12,6 +12,7 @@ export const PaymentPage = () => {
 
   const { data } = useLoaderData() as any;
 
+
   const application = data?.application ?? data;
 
   const userEmail =
@@ -28,11 +29,16 @@ export const PaymentPage = () => {
   const amountPaid = Number(application?.amountPaid ?? 0);
 
   const remainingBalance = totalAmount - amountPaid;
+  const hasStartedPayment =
+  amountPaid > 0 || (application?.payments?.length ?? 0) > 0;
+
+  const canCancelRegistration = !hasStartedPayment;
 
   // ---------------------------
   // EXTRA SESSION (USER OVERRIDE AMOUNT)
   // ---------------------------
   const [customAmount, setCustomAmount] = useState<number | ''>('');
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const minPartialAmount = Math.round(totalAmount * 0.5);
 
@@ -41,7 +47,6 @@ export const PaymentPage = () => {
   // ---------------------------
   const payableAmount = useMemo(() => {
     if (paymentPlan === 'PARTIAL') {
-      // If user entered custom amount, use it
       if (customAmount !== '' && customAmount > 0) {
         return customAmount;
       }
@@ -53,7 +58,7 @@ export const PaymentPage = () => {
   }, [paymentPlan, totalAmount, remainingBalance, customAmount]);
 
   // ---------------------------
-  // VALIDATION GUARD
+  // VALIDATION
   // ---------------------------
   const isInvalidPartial =
     paymentPlan === 'PARTIAL' &&
@@ -73,6 +78,32 @@ export const PaymentPage = () => {
   }).format(payableAmount);
 
   // ---------------------------
+  // CANCEL REGISTRATION
+  // ---------------------------
+  const handleCancelRegistration = async () => {
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this registration? This cannot be undone."
+    );
+
+    if (!confirmCancel) return;
+
+    try {
+      setIsCancelling(true);
+
+      // await fetch(`/api/v1/applications/${applicationId}/cancel`, {
+      //   method: 'PATCH',
+      // });
+
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to cancel registration');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // ---------------------------
   // PAYSTACK CONFIG
   // ---------------------------
   const config = {
@@ -82,7 +113,7 @@ export const PaymentPage = () => {
 
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
 
-   metadata: {
+    metadata: {
       applicationId,
       paymentPlan,
       expectedAmount: payableAmount,
@@ -121,7 +152,9 @@ export const PaymentPage = () => {
     }
 
     if (isInvalidPartial) {
-      alert(`Partial payment must be between ₦${minPartialAmount.toLocaleString()} and ₦${remainingBalance.toLocaleString()}`);
+      alert(
+        `Partial payment must be between ₦${minPartialAmount.toLocaleString()} and ₦${remainingBalance.toLocaleString()}`
+      );
       return;
     }
 
@@ -170,16 +203,12 @@ export const PaymentPage = () => {
         </div>
 
         <div className="flex justify-between border-t border-slate-700 pt-4">
-          <span className="font-bold text-slate-400">
-            Remaining Balance
-          </span>
-
+          <span className="font-bold text-slate-400">Remaining Balance</span>
           <span className="text-3xl font-black text-rose-400">
             {formattedRemaining}
           </span>
         </div>
 
-        {/* PLAN LABEL */}
         <div className="pt-4 text-sm text-slate-400 font-bold uppercase">
           Payment Plan: {paymentPlan}
           {paymentPlan === 'PARTIAL' && (
@@ -190,7 +219,24 @@ export const PaymentPage = () => {
         </div>
       </div>
 
-      {/* EXTRA SESSION INPUT (NO DESIGN CHANGE, SAME STYLE SYSTEM) */}
+      {/* 🚨 CANCEL BUTTON (NEW - BEST POSITION) */}
+      {canCancelRegistration && (<button
+        onClick={handleCancelRegistration}
+        disabled={isCancelling}
+        className="
+          w-full py-6 text-xl font-black
+          bg-rose-500 text-white
+          border-4 border-slate-900
+          shadow-[6px_6px_0px_0px_#0f172a]
+          hover:shadow-none hover:translate-y-1
+          transition-all uppercase italic
+          opacity-90 hover:opacity-100
+        "
+      >
+        {isCancelling ? 'Cancelling...' : 'Cancel Registration'}
+      </button>)}
+
+      {/* EXTRA SESSION INPUT */}
       {paymentPlan === 'PARTIAL' && (
         <div className="text-left space-y-2">
           <label className="text-xs font-black uppercase text-slate-500">
