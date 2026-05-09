@@ -150,6 +150,7 @@ async findById(id: string) {
         status: true,
         pricePerClass: true,
         isClassVisible: true,
+        theme: true,
         classes: {
           select: {
             id: true,

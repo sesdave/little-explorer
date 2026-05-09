@@ -111,7 +111,7 @@ export const LoginPage = () => {
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-black italic text-center tracking-tighter leading-none uppercase">
-            My Little <br /> Explorers
+            VBS <br /> ECWA Maitama
           </h1>
           <p className="mt-4 font-bold text-sky-900 text-center text-sm md:text-base opacity-90 max-w-[200px]">
             Adventure awaits!

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Sex } from '@prisma/client';
 import { SessionRepository } from '../../session/session.repository';
 import { UserRepository } from '../../user/user.repository';
 import { EnrollmentRepository } from 'src/enrollment/enrollment.repository';
@@ -75,7 +75,8 @@ export class FamilyService {
           id: activeSession.id,
           name: activeSession.name,
           pricePerClass: activeSession.pricePerClass,
-          isClassVisible: activeSession.isClassVisible
+          isClassVisible: activeSession.isClassVisible,
+          theme: activeSession.theme
         }
       : null,
 
@@ -112,12 +113,14 @@ export class FamilyService {
     firstName: string; 
     lastName: string; 
     dob: string; 
+    sex: Sex; 
     photoUrl?: string 
   }) {
     return this.prisma.child.create({
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
+        sex: data.sex,
         dob: new Date(data.dob),
         photoUrl: data.photoUrl,
         // Connect notation is cleaner and more "Prisma-native"

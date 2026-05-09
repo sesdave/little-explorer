@@ -19,6 +19,10 @@ export class CreateSessionDto {
   @IsOptional()
   description?: string;
 
+  @IsString()
+  @IsOptional()
+  theme?: string;
+
   @IsNumber()
   @Min(0)
   pricePerClass!: number; // 👈 Missing in your current attempt

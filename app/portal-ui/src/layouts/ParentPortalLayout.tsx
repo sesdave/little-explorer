@@ -25,7 +25,7 @@ export const ParentPortalLayout = () => {
             to="/" 
             className="font-black text-3xl text-sky-500 tracking-tight italic hover:scale-105 transition-transform"
           >
-            Little Explorers
+            VBS ECWA Maitama
           </Link>
 
           {/* User Profile Area */}

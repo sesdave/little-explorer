@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../../auth/guard/jwt.guard';
 import { FamilyService } from '../services/family.service';
 import { S3Service } from '../../s3/s3.service';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CreateChildDto } from '../dto/create-child';
 
 @UseGuards(JwtAuthGuard)
 @Controller('family')
@@ -35,7 +36,7 @@ export class FamilyController {
   @UseInterceptors(FileInterceptor('photo')) // Matches the 'photo' field in your Frontend FormData
   async addChild(
     @Req() req: any,
-    @Body() dto: { firstName: string; lastName: string; dob: string },
+    @Body() dto: CreateChildDto,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
