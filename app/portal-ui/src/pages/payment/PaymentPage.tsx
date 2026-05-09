@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { usePaystackPayment } from 'react-paystack';
 import { ShieldCheck } from 'lucide-react';
 import { useLoaderData } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 export const PaymentPage = () => {
   const { applicationId } = useParams();
@@ -20,7 +20,7 @@ export const PaymentPage = () => {
     'sesughdtyohemba@gmail.com';
 
   // ---------------------------
-  // BACKEND SOURCE OF TRUTH
+  // SOURCE OF TRUTH
   // ---------------------------
   const paymentPlan = application?.paymentPlan; // FULL | PARTIAL
 
@@ -30,17 +30,34 @@ export const PaymentPage = () => {
   const remainingBalance = totalAmount - amountPaid;
 
   // ---------------------------
-  // PAYMENT RULE
+  // EXTRA SESSION (USER OVERRIDE AMOUNT)
   // ---------------------------
-  const minimumDeposit = Math.min(5000, remainingBalance);
+  const [customAmount, setCustomAmount] = useState<number | ''>('');
 
+  const minPartialAmount = Math.round(totalAmount * 0.5);
+
+  // ---------------------------
+  // CORE RULE
+  // ---------------------------
   const payableAmount = useMemo(() => {
     if (paymentPlan === 'PARTIAL') {
-      return minimumDeposit;
+      // If user entered custom amount, use it
+      if (customAmount !== '' && customAmount > 0) {
+        return customAmount;
+      }
+
+      return minPartialAmount;
     }
 
     return remainingBalance;
-  }, [paymentPlan, minimumDeposit, remainingBalance]);
+  }, [paymentPlan, totalAmount, remainingBalance, customAmount]);
+
+  // ---------------------------
+  // VALIDATION GUARD
+  // ---------------------------
+  const isInvalidPartial =
+    paymentPlan === 'PARTIAL' &&
+    (payableAmount < minPartialAmount || payableAmount > remainingBalance);
 
   // ---------------------------
   // FORMATTING
@@ -65,17 +82,10 @@ export const PaymentPage = () => {
 
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
 
-    metadata: {
+    custom_fields: {
       applicationId,
-      paymentPlan, // ✅ IMPORTANT: backend truth
-
-      custom_fields: [
-        {
-          display_name: 'Application ID',
-          variable_name: 'application_id',
-          value: applicationId,
-        },
-      ],
+      paymentPlan,
+      expectedAmount: payableAmount,
     },
   };
 
@@ -89,6 +99,11 @@ export const PaymentPage = () => {
 
     if (!payableAmount || payableAmount <= 0) {
       alert('Invalid payment amount');
+      return;
+    }
+
+    if (isInvalidPartial) {
+      alert(`Partial payment must be between ₦${minPartialAmount.toLocaleString()} and ₦${remainingBalance.toLocaleString()}`);
       return;
     }
 
@@ -146,11 +161,41 @@ export const PaymentPage = () => {
           </span>
         </div>
 
-        {/* OPTIONAL INFO */}
+        {/* PLAN LABEL */}
         <div className="pt-4 text-sm text-slate-400 font-bold uppercase">
           Payment Plan: {paymentPlan}
+          {paymentPlan === 'PARTIAL' && (
+            <span className="text-amber-400 ml-2">
+              (Min 50% required, editable up to full balance)
+            </span>
+          )}
         </div>
       </div>
+
+      {/* EXTRA SESSION INPUT (NO DESIGN CHANGE, SAME STYLE SYSTEM) */}
+      {paymentPlan === 'PARTIAL' && (
+        <div className="text-left space-y-2">
+          <label className="text-xs font-black uppercase text-slate-500">
+            Custom Amount (optional)
+          </label>
+
+          <input
+            type="number"
+            value={customAmount}
+            onChange={(e) =>
+              setCustomAmount(
+                e.target.value === '' ? '' : Number(e.target.value)
+              )
+            }
+            placeholder={`Min ₦${minPartialAmount.toLocaleString()}`}
+            className="w-full p-4 border-4 border-slate-900 rounded-2xl font-bold"
+          />
+
+          <p className="text-[10px] font-bold text-slate-400 uppercase">
+            You can pay more than 50% but not exceed total balance
+          </p>
+        </div>
+      )}
 
       {/* PAY BUTTON */}
       <button
