@@ -82,10 +82,28 @@ export const PaymentPage = () => {
 
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
 
-    custom_fields: {
+   metadata: {
       applicationId,
       paymentPlan,
       expectedAmount: payableAmount,
+
+      custom_fields: [
+        {
+          display_name: "Application ID",
+          variable_name: "application_id",
+          value: applicationId ?? "",
+        },
+        {
+          display_name: "Payment Plan",
+          variable_name: "payment_plan",
+          value: paymentPlan,
+        },
+        {
+          display_name: "Expected Amount",
+          variable_name: "expected_amount",
+          value: payableAmount.toString(),
+        },
+      ],
     },
   };
 
