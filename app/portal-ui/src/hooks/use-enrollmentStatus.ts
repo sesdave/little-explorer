@@ -19,7 +19,7 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
     children?.forEach((child: any) => {
       const regs =
         child.registrations?.filter(
-          (r: any) => r.sessionId === session?.id
+          (r: any) => r.sessionId === session?.id && r.status !== 'CANCELLED'
         ) || [];
 
       if (!regs.length) {
