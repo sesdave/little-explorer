@@ -1,5 +1,5 @@
 // src/modules/enrollment/enrollment.controller.ts
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RegistrationService } from './registration.service';
@@ -33,5 +33,17 @@ export class EnrollmentController {
     );
     console.log("entered application", sessionId, application);
     return {success: true, data: application };
+  }
+
+   @UseGuards(JwtAuthGuard)
+  @Patch(':applicationId/cancel')
+  async cancelRegistration(
+    @Param('applicationId') applicationId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.registrationService.cancelApplication(
+      applicationId,
+      userId,
+    );
   }
 }

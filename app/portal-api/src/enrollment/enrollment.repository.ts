@@ -1,7 +1,7 @@
 // src/modules/enrollment/enrollment.repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaymentPlan } from '@prisma/client';
+import { PaymentPlan, RegistrationStatus } from '@prisma/client';
 
 @Injectable()
 export class EnrollmentRepository {
@@ -314,4 +314,77 @@ async revertRegistrationsToProvisional(
       return results;
     });
   }*/
+
+  async findApplicationForCancellation(applicationId: string) {
+    return this.prisma.application.findUnique({
+      where: { id: applicationId },
+
+      include: {
+        payments: true,
+
+        registrations: {
+          include: {
+            class: true,
+          },
+        },
+      },
+    });
+  }
+
+   async cancelApplicationTransaction(
+  applicationId: string,
+  registrations: any[],
+) {
+  return this.prisma.$transaction(async (tx) => {
+
+    const classIds = registrations.map(
+      (r) => r.classId,
+    );
+
+    // Lock affected rows
+    await tx.$queryRaw`
+      SELECT id
+      FROM "Class"
+      WHERE id = ANY(${classIds})
+      FOR UPDATE
+    `;
+
+    // Cancel registrations
+    await tx.registration.updateMany({
+      where: {
+        applicationId,
+      },
+
+      data: {
+        status: RegistrationStatus.CANCELLED,
+      },
+    });
+
+    // Release occupied seats
+    for (const registration of registrations) {
+      await tx.class.update({
+        where: {
+          id: registration.classId,
+        },
+
+        data: {
+          registrationsCount: {
+            decrement: 1,
+          },
+        },
+      });
+    }
+
+    // Cancel application
+    await tx.application.update({
+      where: {
+        id: applicationId,
+      },
+
+      data: {
+        status: 'CANCELLED',
+      },
+    });
+  });
+}
 }

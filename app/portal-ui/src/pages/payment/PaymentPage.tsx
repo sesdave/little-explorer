@@ -5,6 +5,8 @@ import { usePaystackPayment } from 'react-paystack';
 import { ShieldCheck } from 'lucide-react';
 import { useLoaderData } from 'react-router-dom';
 import { useMemo, useState } from 'react';
+import api from '@/services/api';
+import axios from 'axios';
 
 export const PaymentPage = () => {
   const { applicationId } = useParams();
@@ -40,12 +42,16 @@ export const PaymentPage = () => {
   const [customAmount, setCustomAmount] = useState<number | ''>('');
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const minPartialAmount = Math.round(totalAmount * 0.5);
+  //const minPartialAmount = Math.round(totalAmount * 0.5);
+  const initialPartialAmount = Math.round(totalAmount * 0.5);
+
+const requiresInitialDeposit =
+  paymentPlan === 'PARTIAL' && !hasStartedPayment;
 
   // ---------------------------
   // CORE RULE
   // ---------------------------
-  const payableAmount = useMemo(() => {
+  /*const payableAmount = useMemo(() => {
     if (paymentPlan === 'PARTIAL') {
       if (customAmount !== '' && customAmount > 0) {
         return customAmount;
@@ -55,14 +61,53 @@ export const PaymentPage = () => {
     }
 
     return remainingBalance;
-  }, [paymentPlan, totalAmount, remainingBalance, customAmount]);
+  }, [paymentPlan, totalAmount, remainingBalance, customAmount]);*/
+  const payableAmount = useMemo(() => {
+  if (paymentPlan === 'PARTIAL') {
+
+    // AFTER first payment:
+    // allow any amount toward balance
+    if (hasStartedPayment) {
+      if (customAmount !== '' && customAmount > 0) {
+        return customAmount;
+      }
+
+      return remainingBalance;
+    }
+
+    // FIRST payment must obey 50%
+    if (customAmount !== '' && customAmount > 0) {
+      return customAmount;
+    }
+
+    return initialPartialAmount;
+  }
+
+  return remainingBalance;
+}, [
+  paymentPlan,
+  remainingBalance,
+  customAmount,
+  hasStartedPayment,
+  initialPartialAmount,
+]);
 
   // ---------------------------
   // VALIDATION
   // ---------------------------
-  const isInvalidPartial =
+  /*const isInvalidPartial =
     paymentPlan === 'PARTIAL' &&
-    (payableAmount < minPartialAmount || payableAmount > remainingBalance);
+    (payableAmount < minPartialAmount || payableAmount > remainingBalance);*/
+  const isInvalidPartial =
+      paymentPlan === 'PARTIAL' &&
+      (
+        payableAmount > remainingBalance ||
+
+        (
+          requiresInitialDeposit &&
+          payableAmount < initialPartialAmount
+        )
+      );
 
   // ---------------------------
   // FORMATTING
@@ -90,14 +135,23 @@ export const PaymentPage = () => {
     try {
       setIsCancelling(true);
 
-      // await fetch(`/api/v1/applications/${applicationId}/cancel`, {
-      //   method: 'PATCH',
-      // });
+      await api.patch(`/v1/registrations/${applicationId}/cancel`)
 
       navigate('/dashboard', { replace: true });
     } catch (err) {
       console.error(err);
-      alert('Failed to cancel registration');
+
+   if (axios.isAxiosError(err)) {
+      alert(
+        err.response?.data?.message ??
+        'Failed to cancel registration'
+      );
+
+      return;
+    }
+
+    alert('Failed to cancel registration');
+
     } finally {
       setIsCancelling(false);
     }
@@ -153,8 +207,10 @@ export const PaymentPage = () => {
 
     if (isInvalidPartial) {
       alert(
-        `Partial payment must be between ₦${minPartialAmount.toLocaleString()} and ₦${remainingBalance.toLocaleString()}`
-      );
+  requiresInitialDeposit
+    ? `First payment must be at least ₦${initialPartialAmount.toLocaleString()}`
+    : `Amount cannot exceed ₦${remainingBalance.toLocaleString()}`
+);
       return;
     }
 
@@ -251,13 +307,19 @@ export const PaymentPage = () => {
                 e.target.value === '' ? '' : Number(e.target.value)
               )
             }
-            placeholder={`Min ₦${minPartialAmount.toLocaleString()}`}
+            placeholder={
+                requiresInitialDeposit
+                  ? `Min ₦${initialPartialAmount.toLocaleString()}`
+                  : `Max ₦${remainingBalance.toLocaleString()}`
+              }
             className="w-full p-4 border-4 border-slate-900 rounded-2xl font-bold"
           />
 
           <p className="text-[10px] font-bold text-slate-400 uppercase">
-            You can pay more than 50% but not exceed total balance
-          </p>
+        {requiresInitialDeposit
+          ? 'Minimum 50% required for first payment'
+          : 'Enter any amount up to remaining balance'}
+      </p>
         </div>
       )}
 

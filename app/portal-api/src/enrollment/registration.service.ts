@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { SessionRepository } from "../session/session.repository";
 import { EnrollmentRepository } from "./enrollment.repository";
 import { BulkRegisterDto } from "./dto/bulk-register.dto";
 import { UserRepository } from "../user/user.repository";
 import { calculateAge } from "src/util/calculateAge";
+import { PaymentStatus } from "@prisma/client";
 
 @Injectable()
 export class RegistrationService {
@@ -112,5 +113,63 @@ private calculatePlacements(
 
   async findPendingApplication(id: string) {
     return await this.enrollmentRepo.findApplicationById(id);
+  }
+
+   async cancelApplication(
+    applicationId: string,
+    parentId: string,
+  ) {
+    const application =
+      await this.enrollmentRepo.findApplicationForCancellation(
+        applicationId,
+      );
+
+    if (!application) {
+      throw new NotFoundException(
+        'Application not found',
+      );
+    }
+
+    // Ownership validation
+    if (application.parentId !== parentId) {
+      throw new BadRequestException(
+        'You cannot cancel this application',
+      );
+    }
+
+    // Idempotency
+    if (application.status === 'CANCELLED') {
+      return {
+        success: true,
+        message: 'Application already cancelled',
+      };
+    }
+
+    // Payment protection
+    const amountPaid = Number(application.amountPaid);
+
+const hasStartedPayment =
+  amountPaid > 0 ||
+  application.payments.some(
+    (payment) => payment.status === PaymentStatus.SUCCESSFUL,
+  );
+
+    if (hasStartedPayment) {
+      throw new BadRequestException(
+        'Cannot cancel application after payment has started',
+      );
+    }
+
+    // Repository transaction
+    await this.enrollmentRepo.cancelApplicationTransaction(
+      applicationId,
+      application.registrations,
+    );
+
+    return {
+      success: true,
+      message:
+        'Registration cancelled successfully',
+    };
   }
 }

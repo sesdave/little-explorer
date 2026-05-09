@@ -187,6 +187,7 @@ model Registration {
 enum RegistrationStatus{
   PROVISIONAL
   CONFIRMED
+  CANCELLED
 }
 
 enum PaymentStatus {
