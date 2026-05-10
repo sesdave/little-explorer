@@ -18,10 +18,12 @@ import { UserModule } from './user/user.module';
 import { SpaModule } from './spa/spa.module';
 import { PaymentModule } from './payment/payment.module';
 import { RevenueModule } from './revenue/revenue.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     // Global env config
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
