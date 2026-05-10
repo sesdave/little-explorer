@@ -3,6 +3,7 @@ import { Receipt } from 'lucide-react';
 type Payment = {
   id: string;
   method: string;
+  status: string;
   amount: number;
   createdAt: string;
 };
@@ -67,7 +68,7 @@ export const RecentPaymentsCard = ({
                   </p>
 
                   <span className="text-[9px] font-black uppercase text-emerald-500">
-                    Successful
+                    {payment.status}
                   </span>
                 </div>
 
