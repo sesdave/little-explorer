@@ -52,7 +52,8 @@ export const DashboardPage = () => {
   const {
     needsEnrollment,
     pendingApplication,
-    needsPayment
+    needsPayment,
+    maybeProcessing
   } = useEnrollmentStatus({
     children: childrenFromStore,
     session: familyData.session,
@@ -93,7 +94,12 @@ export const DashboardPage = () => {
             </div>
 
             <div className="flex gap-4">
-              {needsPayment ? (
+              {maybeProcessing ? (
+                <EnrollmentButton
+                  onClick={()=>{}}
+                  variant="processing"
+                />
+              ) : needsPayment ? (
                 <EnrollmentButton
                   onClick={handlePrimaryAction}
                   variant="payment"

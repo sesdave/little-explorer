@@ -47,6 +47,15 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
     return ['PENDING', 'PARTIALLY_PAID'].includes(activeApplication.status);
   }, [activeApplication]);
 
+  const maybeProcessing = useMemo(() => {
+    if (!activeApplication || !activeApplication.payments) return false;
+
+    // Check if any payment associated with this application is currently 'PENDING'
+    return activeApplication.payments.some(
+      (payment: any) => payment.status === 'PENDING'
+    );
+  }, [activeApplication]);
+
   const isActive = useMemo(() => {
     return activeApplication?.status === 'COMPLETED';
   }, [activeApplication]);
@@ -54,6 +63,7 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
   return {
     needsEnrollment,
     needsPayment,
+    maybeProcessing,
     isActive,
     childStatusMap,
     pendingApplication: activeApplication,
