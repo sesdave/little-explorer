@@ -218,7 +218,7 @@ export const RegistrationPage = () => {
       )}
 
       {/* CTA */}
-      <div className="pt-10 sticky bottom-6">
+      <div className="pt-10 sticky bottom-6 sm:bottom-6 bg-white/80 backdrop-blur-sm -mx-6 px-6 pb-6">
         <Button
           onClick={() => setShowConfirm(true)}
           disabled={selectedIds.length === 0}

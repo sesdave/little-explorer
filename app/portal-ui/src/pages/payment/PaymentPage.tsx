@@ -14,6 +14,8 @@ export const PaymentPage = () => {
 
   const { data } = useLoaderData() as any;
 
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
 
   const application = data?.application ?? data;
 
@@ -126,11 +128,11 @@ const requiresInitialDeposit =
   // CANCEL REGISTRATION
   // ---------------------------
   const handleCancelRegistration = async () => {
-    const confirmCancel = window.confirm(
-      "Are you sure you want to cancel this registration? This cannot be undone."
-    );
+    // const confirmCancel = window.confirm(
+    //   "Are you sure you want to cancel this registration? This cannot be undone."
+    // );
 
-    if (!confirmCancel) return;
+    //if (!confirmCancel) return;
 
     try {
       setIsCancelling(true);
@@ -154,6 +156,7 @@ const requiresInitialDeposit =
 
     } finally {
       setIsCancelling(false);
+      setShowCancelConfirm(false);
     }
   };
 
@@ -277,7 +280,7 @@ const requiresInitialDeposit =
 
       {/* 🚨 CANCEL BUTTON (NEW - BEST POSITION) */}
       {canCancelRegistration && (<button
-        onClick={handleCancelRegistration}
+        onClick={() => setShowCancelConfirm(true)}
         disabled={isCancelling}
         className="
           w-full py-6 text-xl font-black
@@ -341,6 +344,64 @@ const requiresInitialDeposit =
       <p className="text-xs font-bold text-slate-400 uppercase">
         Secure Transaction via Paystack
       </p>
+
+      {/* CANCEL CONFIRMATION MODAL */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6">
+          
+          <div className="
+            w-full max-w-md
+            bg-white
+            border-4 border-slate-900
+            rounded-[2rem]
+            p-8
+            shadow-[10px_10px_0px_0px_#0f172a]
+            space-y-6
+          ">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-black uppercase italic text-slate-900">
+                Cancel Registration?
+              </h2>
+
+              <p className="font-bold text-slate-600">
+                This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="
+                  flex-1 py-4
+                  border-4 border-slate-900
+                  bg-slate-200
+                  font-black uppercase
+                  rounded-2xl
+                "
+              >
+                Go Back
+              </button>
+
+              <button
+                onClick={handleCancelRegistration}
+                disabled={isCancelling}
+                className="
+                  flex-1 py-4
+                  border-4 border-slate-900
+                  bg-rose-500 text-white
+                  font-black uppercase italic
+                  rounded-2xl
+                  shadow-[4px_4px_0px_0px_#0f172a]
+                "
+              >
+                {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+
+            </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
