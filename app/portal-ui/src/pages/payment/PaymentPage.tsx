@@ -206,13 +206,6 @@ const [statusModal, setStatusModal] = useState<{
   message: string;
 } | null>(null);
 
-const [payConfig, setPayConfig] = useState<any>({
-    email: userEmail,
-    amount: 0,
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-  });
-
-  const initializePaystack = usePaystackPayment(payConfig);
   interface PaystackArgs {
   publicKey: string;
   email: string;
@@ -285,15 +278,15 @@ const handlePaymentClick = async () => {
                 value: payableAmount.toString(),
               },
             ],
-        },
-        onSuccess: (res: any) => {
-          setIsInitializing(false);
-          navigate(`/dashboard/payment/verifying?reference=${res.reference}`);
-        },
-        onClose: () => setIsInitializing(false),
+        }
       };
+      const initializePayment = usePaystackPayment(paymentArgs);
+      initializePayment({
+      onSuccess,
+      onClose,
+    });
 
-      initializePaystack(paymentArgs);;
+      //initializePaystack(paymentArgs);;
 
     } catch (err: any) {
       console.error("Payment Init Error:", err);
@@ -404,15 +397,16 @@ const handlePaymentClick = async () => {
     });
   };*/
 
-  const onSuccess = async (reference: any) => {
-    navigate(
-      `/dashboard/payment/verifying?reference=${reference.reference}`,
-    );
-  };
+   const onSuccess = async (reference: any) => {
+      setIsInitializing(false);
+     navigate(
+       `/dashboard/payment/verifying?reference=${reference.reference}`,
+     );
+   };
 
-  const onClose = () => {
-    console.log('Payment closed');
-  };
+   const onClose = () => {
+     setIsInitializing(false)
+   };
 
   return (
     <div className="max-w-2xl mx-auto p-12 text-center space-y-8">
