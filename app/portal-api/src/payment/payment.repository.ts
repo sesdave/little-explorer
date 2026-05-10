@@ -5,8 +5,14 @@ import {
   ApplicationStatus,
   PaymentMethod,
   PaymentStatus,
+  Prisma,
   RegistrationStatus,
 } from '@prisma/client';
+
+type TransactionClient = Omit<
+  Prisma.TransactionClient, 
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'
+>
 
 @Injectable()
 export class PaymentRepository {
@@ -57,7 +63,49 @@ export class PaymentRepository {
     });
   }
 
+  /**
+   * REFINED: Participates in existing transactions or starts its own.
+   * This is key for the Webhook to update both the payment and application at once.
+   */
   async updateApplicationBalances(
+    applicationId: string,
+    tx: TransactionClient = this.prisma // Default to standard prisma if no tx provided
+  ) {
+    const application = await tx.application.findUniqueOrThrow({
+      where: { id: applicationId },
+      include: { payments: true },
+    });
+
+    const totalPaid = application.payments.reduce(
+      (sum, payment) => (payment.status === PaymentStatus.SUCCESSFUL ? sum + Number(payment.amount) : sum),
+      0,
+    );
+
+    const totalAmount = Number(application.totalAmount);
+    const remainingBalance = totalAmount - totalPaid;
+    const isFullyPaid = remainingBalance <= 0;
+
+    const updatedApplication = await tx.application.update({
+      where: { id: applicationId },
+      data: {
+        amountPaid: totalPaid,
+        balanceDue: Math.max(remainingBalance, 0),
+      },
+    });
+
+    // Delegate enrollment logic to the enrollment repo, passing the same tx client
+    if (isFullyPaid) {
+      await this.enrollmentRepo.markApplicationCompleted(applicationId, tx);
+      await this.enrollmentRepo.confirmRegistrations(applicationId, tx);
+    } else {
+      await this.enrollmentRepo.markApplicationPartiallyPaid(applicationId, tx);
+      await this.enrollmentRepo.revertRegistrationsToProvisional(applicationId, tx);
+    }
+
+    return updatedApplication;
+  }
+
+ /* async updateApplicationBalances(
     applicationId: string,
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -130,7 +178,7 @@ export class PaymentRepository {
 
       return updatedApplication;
     });
-  }
+  }*/
 
   async getApplicationPaymentSummary(
     applicationId: string,
@@ -232,6 +280,39 @@ export class PaymentRepository {
         status:
           RegistrationStatus.PROVISIONAL,
       },
+    });
+  }
+
+  async getApplicationData(id: string) {
+    return this.prisma.application.findUnique({
+      where: { id },
+      include: { parent: true }
+    });
+  }
+
+  // Specialized query for idempotency
+  async findRecentPending(applicationId: string, amount: number) {
+    return this.prisma.payment.findFirst({
+      where: {
+        applicationId,
+        amount,
+        status: 'PENDING',
+        createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) }
+      }
+    });
+  }
+
+  // Staff Level: Accepts an optional 'tx' to participate in service-led transactions
+  async createPaymentRecord(data: any, tx?: any) {
+    const client = tx || this.prisma;
+    return client.payment.create({
+      data: {
+        applicationId: data.applicationId,
+        amount: data.amount,
+        externalReference: data.reference,
+        status: 'PENDING',
+        method: 'PAYSTACK'
+      }
     });
   }
 }

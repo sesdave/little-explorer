@@ -195,9 +195,190 @@ const requiresInitialDeposit =
     },
   };
 
-  const initializePayment = usePaystackPayment(config);
+  //const initializePayment = usePaystackPayment(config);
 
-  const handlePaymentClick = () => {
+  // 1. Add this state at the top of your component
+const [isInitializing, setIsInitializing] = useState(false);
+
+const [statusModal, setStatusModal] = useState<{
+  show: boolean;
+  title: string;
+  message: string;
+} | null>(null);
+
+const [payConfig, setPayConfig] = useState<any>({
+    email: userEmail,
+    amount: 0,
+    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+  });
+
+  const initializePaystack = usePaystackPayment(payConfig);
+  interface PaystackArgs {
+  publicKey: string;
+  email: string;
+  amount: number;
+  reference: string;
+  metadata?: Record<string, any>;
+  onSuccess: (response: any) => void;
+  onClose: () => void;
+}
+
+const handlePaymentClick = async () => {
+    // 1. Client-side Pre-checks
+    if (!userEmail) {
+      setStatusModal({ show: true, title: "Missing Info", message: "Email is required." });
+      return;
+    }
+    if (payableAmount <= 0 || isInvalidPartial) {
+      setStatusModal({ 
+        show: true, 
+        title: "Invalid Amount", 
+        message: requiresInitialDeposit 
+          ? `First payment must be at least ₦${initialPartialAmount.toLocaleString()}` 
+          : "Please check the amount." 
+      });
+      return;
+    }
+
+    try {
+      setIsInitializing(true);
+
+      // 2. GET AUTHORITY FROM BACKEND
+      // We send our intent, backend validates and creates the PENDING record
+      const response = await api.post('/v1/payments/initialize', {
+        applicationId,
+        amount: payableAmount,
+      });
+
+      const backendData = response.data;
+      console.log("backend data", import.meta.env.VITE_PAYSTACK_PUBLIC_KEY)
+
+      if (!backendData?.reference) {
+        throw new Error("Backend failed to generate a transaction reference.");
+      }
+
+      // 3. TRIGGER PAYSTACK WITH BACKEND DATA
+      // We pass EVERYTHING in one object to the trigger function
+      const paymentArgs: any = {
+        publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        email: backendData.email || userEmail,
+        amount: backendData.amount, // Using backend's calculated amount (usually kobo)
+        reference: backendData.reference, // Using backend's generated reference
+        metadata: {
+          applicationId,
+          expectedAmount: backendData.amount,
+          paymentPlan,
+           custom_fields: [
+              {
+                display_name: "Application ID",
+                variable_name: "application_id",
+                value: applicationId ?? "",
+              },
+              {
+                display_name: "Payment Plan",
+                variable_name: "payment_plan",
+                value: paymentPlan,
+              },
+              {
+                display_name: "Expected Amount",
+                variable_name: "expected_amount",
+                value: payableAmount.toString(),
+              },
+            ],
+        },
+        onSuccess: (res: any) => {
+          setIsInitializing(false);
+          navigate(`/dashboard/payment/verifying?reference=${res.reference}`);
+        },
+        onClose: () => setIsInitializing(false),
+      };
+
+      initializePaystack(paymentArgs);;
+
+    } catch (err: any) {
+      console.error("Payment Init Error:", err);
+      setStatusModal({
+        show: true,
+        title: "Payment Error",
+        message: err.response?.data?.message || "Could not connect to payment server. Please try again.",
+      });
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+// 2. The Updated handlePaymentClick
+/*const handlePaymentClick = async () => {
+  // --- VALIDATION ---
+  if (!userEmail) {
+    setStatusModal({
+      show: true,
+      title: "Missing Info",
+      message: "User email is required to process payment.",
+    });
+    return;
+  }
+
+  if (!payableAmount || payableAmount <= 0) {
+    setStatusModal({
+      show: true,
+      title: "Invalid Amount",
+      message: "Please enter a valid amount to continue.",
+    });
+    return;
+  }
+
+  if (isInvalidPartial) {
+    const errorMsg = requiresInitialDeposit
+      ? `First payment must be at least ₦${initialPartialAmount.toLocaleString()}`
+      : `Amount cannot exceed ₦${remainingBalance.toLocaleString()}`;
+    
+    setStatusModal({
+      show: true,
+      title: "Payment Constraint",
+      message: errorMsg,
+    });
+    return;
+  }
+
+  // --- IDEMPOTENT INITIALIZATION ---
+  try {
+    setIsInitializing(true);
+
+    // Call your Staff-level API endpoint
+    const response = await api.post('/v1/payments/initialize', {
+      applicationId,
+      amount: payableAmount,
+    });
+
+    const { reference } = response.data;
+
+    // Now trigger Paystack using the reference from the BACKEND
+    // Note: You should update your 'config' object to use this dynamic reference
+    initializePayment({
+      onSuccess,
+      onClose: () => {
+        setIsInitializing(false);
+        console.log("Payment closed");
+      },
+      // Pass the backend reference here if your hook allows, 
+      // or ensure the 'config' state was updated.
+      reference: reference 
+    });
+
+  } catch (err: any) {
+    console.error(err);
+    setStatusModal({
+      show: true,
+      title: "Connection Error",
+      message: err.response?.data?.message ?? "Could not initialize payment. Please try again.",
+    });
+  } finally {
+    setIsInitializing(false);
+  }
+};*/
+
+  /*const handlePaymentClick = () => {
     if (!userEmail) {
       alert('User email is required');
       return;
@@ -221,7 +402,7 @@ const requiresInitialDeposit =
       onSuccess,
       onClose,
     });
-  };
+  };*/
 
   const onSuccess = async (reference: any) => {
     navigate(
@@ -399,6 +580,27 @@ const requiresInitialDeposit =
               </button>
 
             </div>
+    </div>
+  </div>
+)}
+{statusModal?.show && (
+  <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-6">
+    <div className="w-full max-w-md bg-white border-4 border-slate-900 rounded-[2rem] p-8 shadow-[10px_10px_0px_0px_#0f172a] space-y-6">
+      <div className="space-y-3">
+        <h2 className="text-2xl font-black uppercase italic text-rose-500">
+          {statusModal.title}
+        </h2>
+        <p className="font-bold text-slate-600">
+          {statusModal.message}
+        </p>
+      </div>
+
+      <button
+        onClick={() => setStatusModal(null)}
+        className="w-full py-4 border-4 border-slate-900 bg-slate-900 text-white font-black uppercase rounded-2xl shadow-[4px_4px_0px_0px_#475569]"
+      >
+        Got it
+      </button>
     </div>
   </div>
 )}
