@@ -34,8 +34,10 @@ export const PaymentPage = () => {
 
   const remainingBalance = totalAmount - amountPaid;
   const hasStartedPayment =
-  amountPaid > 0 || (application?.payments?.length ?? 0) > 0;
-
+  amountPaid > 0 ||
+  application?.payments?.some(
+    (    payment: { status: string; }) => payment.status === 'SUCCESSFUL'
+  );
   const canCancelRegistration = !hasStartedPayment;
 
   // ---------------------------
