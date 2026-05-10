@@ -1,6 +1,6 @@
 // src/modules/payment/payment.controller.ts
 import { Controller, Post, Get, Body, Headers, HttpCode, HttpStatus, Param, UseGuards } from '@nestjs/common';
-import { PaymentService } from './payment.service';
+import { PaymentService } from './services/payment.service';
 import { JwtAuthGuard } from 'src/auth/guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 

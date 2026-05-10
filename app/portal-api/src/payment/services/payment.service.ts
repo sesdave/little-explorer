@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import * as crypto from 'crypto';
-import { PaymentRepository } from './payment.repository';
+import { PaymentRepository } from '../payment.repository';
 import { nanoid } from 'nanoid';
 import { PrismaService } from 'src/prisma/prisma.service';
 

@@ -195,6 +195,7 @@ enum PaymentStatus {
   SUCCESSFUL // Money is in the bank
   FAILED // Transaction declined
   REFUNDED // Money returned to parent
+  EXPIRED
 }
 
 enum PaymentMethod {

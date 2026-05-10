@@ -315,4 +315,48 @@ export class PaymentRepository {
       }
     });
   }
+
+  /**
+   * STAFF LEVEL: Completes a payment and reconciles the application.
+   * Wraps everything in a transaction to ensure database integrity.
+   */
+  async completePayment(paymentId: string, paystackData: any) {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Update the Payment record to SUCCESSFUL
+      const payment = await tx.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: PaymentStatus.SUCCESSFUL,
+          paidAt: new Date(),
+          // Store any extra metadata from paystack if needed
+          channel: paystackData.channel, 
+        },
+      });
+
+      // 2. Trigger the balance reconciliation logic using the same transaction client
+      // This will automatically mark application as COMPLETED and CONFIRM registrations
+      await this.updateApplicationBalances(payment.applicationId, tx as TransactionClient);
+
+      return payment;
+    });
+  }
+
+  /**
+   * Batch invalidate pending payments (used by Cron as a fallback)
+   */
+  async invalidateExpiredPayments(thresholdMinutes: number = 30) {
+    const thresholdDate = new Date(Date.now() - thresholdMinutes * 60 * 1000);
+
+    return this.prisma.payment.updateMany({
+      where: {
+        status: PaymentStatus.PENDING,
+        createdAt: {
+          lt: thresholdDate,
+        },
+      },
+      data: {
+        status: PaymentStatus.FAILED,
+      },
+    });
+  }
 }
