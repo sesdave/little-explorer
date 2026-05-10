@@ -261,7 +261,7 @@ const requiresInitialDeposit =
           </span>
         </div>
 
-        <div className="flex justify-between border-t border-slate-700 pt-4">
+        <div className="flex flex-col sm:flex-row justify-between border-t border-slate-700 pt-4">
           <span className="font-bold text-slate-400">Remaining Balance</span>
           <span className="text-3xl font-black text-rose-400">
             {formattedRemaining}
