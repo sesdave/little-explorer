@@ -177,7 +177,7 @@ export class PaymentService {
     // 2. Logic: Idempotency check
     const existing = await this.paymentRepo.findRecentPending(applicationId, amount);
     if (existing) {
-      return { reference: existing.externalReference, email: application.parent.email, amount: Math.round(amount * 100) };
+      return { reference: existing.externalReference, email: application.parent.email, amount: Math.round(Number(existing.amount) * 100) };
     }
 
     // 3. Logic: Orchestrate the Write via Transaction
