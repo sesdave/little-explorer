@@ -251,7 +251,7 @@ const handlePaymentClick = async () => {
       });
 
       const backendData = response.data;
-      console.log("backend data", import.meta.env.VITE_PAYSTACK_PUBLIC_KEY)
+      console.log("backend data", backendData)
 
       if (!backendData?.reference) {
         throw new Error("Backend failed to generate a transaction reference.");
