@@ -242,8 +242,8 @@ const requiresInitialDeposit =
       </div>
 
       {/* TITLE */}
-      <h1 className="text-5xl font-black uppercase italic text-slate-900">
-        Complete Registration
+      <h1 className="text-3xl sm:text-5xl font-black uppercase italic text-slate-900 leading-[0.95] break-words">
+        Complete <br className="sm:hidden" /> Registration
       </h1>
 
       {/* SUMMARY */}
