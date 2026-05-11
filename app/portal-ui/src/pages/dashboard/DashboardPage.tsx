@@ -176,7 +176,10 @@ export const DashboardPage = () => {
 
         <main className="flex-1 space-y-12">
 
-          <FamilyOverview />
+          <FamilyOverview 
+           session={familyData.session} 
+           pendingApplication={familyData.pendingApplication}
+          />
 
           <section className="bg-amber-100 rounded-[3.5rem] p-10 border-4 border-slate-900 shadow-[12px_12px_0px_0px_#0f172a] flex justify-between items-center">
 
