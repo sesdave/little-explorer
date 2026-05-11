@@ -21,12 +21,14 @@ export class AdminController {
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
+    @Query('paymentStatus') paymentStatus?: string,
   ) {
     // 🏛️ Convert query strings to numbers for the service
     return this.adminService.getAllExplorers(
       parseInt(page, 10), 
       parseInt(limit, 10),
-      search
+      search,
+      paymentStatus
     );
   }
 }
