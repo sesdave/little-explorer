@@ -9,6 +9,7 @@ import { AdminClassesPage } from '@/pages/admin/AdminClassesPage ';
 import { classLoader } from '@/loaders/class.loader';
 import { AdminRevenuePage } from '@/pages/admin/AdminRevenuePage';
 import { adminRevenueLoader } from '@/loaders/adminRevenueLoader';
+import { BroadcastPage } from '@/components/admin/BroadcastPage';
 
 
 export const adminRoutes: RouteObject = {
@@ -43,6 +44,10 @@ export const adminRoutes: RouteObject = {
         path: 'revenue', // 👈 The route the StatCard navigates to
         element: <AdminRevenuePage />,
         loader: adminRevenueLoader,
+      },
+       {
+        path: 'broadcast', // 👈 The route the StatCard navigates to
+        element: <BroadcastPage />,
       },
 
   ],

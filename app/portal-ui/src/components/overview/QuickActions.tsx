@@ -34,6 +34,7 @@ export const QuickActions = ({ pendingCount }: { pendingCount?: number }) => {
          <AdminActionButton 
             label="Broadcast Message" 
             icon={<Activity size={16} />} 
+            onClick={() => navigate('/admin/broadcast')}
          />
       </div>
     </div>
