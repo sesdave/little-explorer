@@ -72,19 +72,21 @@ export class AdminService {
 async getAllExplorers(page: number, limit: number, search?: string, paymentStatus?: string) {
   const skip = (page - 1) * limit;
 
-  let where: any = search ? {
+  // 1. Start with the search filter
+  const searchFilter = search ? {
     OR: [
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } },
-      { parent: { name: { contains: search, mode: 'insensitive' } } }
+      { firstName: { contains: search, mode: 'insensitive' as const } },
+      { lastName: { contains: search, mode: 'insensitive' as const } },
+      { parent: { name: { contains: search, mode: 'insensitive' as const } } }
     ]
   } : {};
 
-  // Handle specialized Payment Filter
+  // 2. Build the Payment Filter
+  let statusFilter: any = {};
+  
   if (paymentStatus && paymentStatus !== 'all') {
     if (paymentStatus === 'unpaid') {
-      where = {
-        ...where,
+      statusFilter = {
         OR: [
           { registrations: { none: {} } }, 
           { registrations: { some: { application: { status: 'PENDING' } } } },
@@ -92,18 +94,29 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
         ]
       };
     } else {
-      const statusMap: Record<string, any> = { paid: 'COMPLETED', partial: 'PARTIALLY_PAID' };
-      where = {
-        ...where,
-        registrations: { some: { application: { status: statusMap[paymentStatus] } } }
+      const statusMap: Record<string, string> = { 
+        paid: 'COMPLETED', 
+        partial: 'PARTIALLY_PAID' 
+      };
+      statusFilter = {
+        registrations: { 
+          some: { application: { status: statusMap[paymentStatus] } } 
+        }
       };
     }
   }
 
+  // 3. COMBINE Search AND Status (The "AND" ensures search works with filters)
+  const where = {
+    AND: [searchFilter, statusFilter]
+  };
+
   const [total, children] = await Promise.all([
     this.prisma.child.count({ where }),
     this.prisma.child.findMany({
-      where, skip, take: limit,
+      where, 
+      skip, 
+      take: limit,
       include: {
         parent: { select: { name: true, email: true } },
         registrations: {
@@ -111,7 +124,12 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
           take: 1,
           include: {
             application: {
-              include: { payments: { where: { status: 'SUCCESSFUL' }, select: { amount: true } } }
+              include: { 
+                payments: { 
+                  where: { status: 'SUCCESSFUL' }, 
+                  select: { amount: true } 
+                } 
+              }
             }
           }
         }
@@ -121,15 +139,26 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
   ]);
 
   const data = children.map((child: any) => {
-    const app = child.registrations?.[0]?.application;
+    const latestReg = child.registrations?.[0];
+    const app = latestReg?.application;
+    
+    // Financial Math
     const amountPaid = app?.payments?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
     const totalAmount = Number(app?.totalAmount || 0);
 
+    // Precise Status Logic
     let status = 'unpaid';
     if (app?.status === 'COMPLETED') status = 'paid';
     else if (app?.status === 'PARTIALLY_PAID') status = 'partial';
-
-    return { ...child, paymentStatus: status, amountPaid, totalAmount };
+    
+    // Return formatted for Naira UI
+    return { 
+      ...child, 
+      paymentStatus: status, 
+      amountPaid, 
+      totalAmount,
+      balance: totalAmount - amountPaid
+    };
   });
 
   return { data, meta: { total, page, lastPage: Math.ceil(total / limit) } };

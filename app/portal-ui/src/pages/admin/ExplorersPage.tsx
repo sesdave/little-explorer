@@ -111,7 +111,7 @@ export const ExplorersPage = () => {
                     <StatusBadge status={child.paymentStatus} />
                     {child.paymentStatus === 'partial' && (
                       <span className="text-[9px] font-black bg-amber-100 border border-slate-900 px-1 rounded">
-                        ${child.amountPaid} / ${child.totalAmount}
+                        ₦{child.amountPaid} / ₦{child.totalAmount}
                       </span>
                     )}
                   </div>
