@@ -64,22 +64,25 @@ export class AdminService {
   }
 
  // apps/api/src/admin/admin.service.ts
+// apps/api/src/admin/admin.service.ts
+
+// apps/api/src/admin/admin.service.ts
+
 async getAllExplorers(page: number, limit: number, search?: string, paymentStatus?: string) {
   const skip = (page - 1) * limit;
 
-  // 1. Build the base filter (Search)
+  // 1. Construct the 'where' clause
   let where: any = search ? {
     OR: [
-      { firstName: { contains: search, mode: 'insensitive' as const } },
-      { lastName: { contains: search, mode: 'insensitive' as const } },
-      { parent: { name: { contains: search, mode: 'insensitive' as const } } }
+      { firstName: { contains: search, mode: 'insensitive' } },
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { parent: { name: { contains: search, mode: 'insensitive' } } }
     ]
   } : {};
 
-  // 2. Add Payment Status Filtering
-  // This assumes a Child -> Parent -> Applications -> Status relationship
+  // 2. Add the Payment Status Filter
   if (paymentStatus && paymentStatus !== 'all') {
-    const statusMap: Record<string, string> = {
+    const statusMap: Record<string, any> = {
       'paid': 'COMPLETED',
       'partial': 'PARTIALLY_PAID',
       'unpaid': 'PENDING'
@@ -87,11 +90,13 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
 
     const targetStatus = statusMap[paymentStatus];
 
+    // This ensures we only get children whose specific registration 
+    // is tied to an application with the selected status.
     where = {
       ...where,
-      parent: {
-        applications: {
-          some: {
+      registrations: {
+        some: {
+          application: {
             status: targetStatus
           }
         }
@@ -99,6 +104,7 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
     };
   }
 
+  // 3. Execute Query
   const [total, children] = await Promise.all([
     this.prisma.child.count({ where }),
     this.prisma.child.findMany({
@@ -106,37 +112,40 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
       skip,
       take: limit,
       include: {
-        parent: { 
-          select: { 
-            name: true, 
-            email: true,
-            applications: {
-              take: 1,
-              orderBy: { createdAt: 'desc' },
-              select: { status: true }
-            }
-          } 
+        parent: {
+          select: { name: true, email: true }
         },
         registrations: {
-          where: { status: 'CONFIRMED' },
-          take: 1
+          orderBy: { createdAt: 'desc' },
+          take: 1, // Get the most recent registration
+          include: {
+            application: {
+              select: { status: true }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
     })
   ]);
 
-  // 3. Map data to include a calculated paymentStatus field for the table
-  const data = children.map(child => {
-    // Map the internal DB status back to your UI labels
-    const appStatus = child.parent?.applications?.[0]?.status;
+  // 4. Map the results for a clean Frontend response
+  const data = children.map((child: any) => {
+    // Access the status of the specific registration for this child
+    const latestReg = child.registrations?.[0];
+    const appStatus = latestReg?.application?.status;
+
     let uiStatus = 'unpaid';
     if (appStatus === 'COMPLETED') uiStatus = 'paid';
-    if (appStatus === 'PARTIALLY_PAID') uiStatus = 'partial';
+    else if (appStatus === 'PARTIALLY_PAID') uiStatus = 'partial';
+    
+    // If there is no registration at all, you might want to call it "inactive"
+    if (!latestReg) uiStatus = 'unpaid'; 
 
     return {
       ...child,
-      paymentStatus: uiStatus
+      paymentStatus: uiStatus,
+      enrolledAt: latestReg?.createdAt || null
     };
   });
 
