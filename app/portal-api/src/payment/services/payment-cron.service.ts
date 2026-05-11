@@ -19,7 +19,7 @@ export class PaymentCronService {
    * Cron Job: Runs every 15 minutes.
    * Purpose: Syncs payments that missed webhooks and cleans up stale/expired attempts.
    */
- // @Cron('0 */5 * * * *')
+ @Cron('0 */5 * * * *')
   async syncAndCleanupPayments() {
     // Determine the cutoff point (30 minutes ago)
     const threshold = new Date(Date.now() - 30 * 60 * 1000);
