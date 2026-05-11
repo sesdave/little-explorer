@@ -68,10 +68,10 @@ export class AdminService {
 
 // apps/api/src/admin/admin.service.ts
 
+// apps/api/src/admin/admin.service.ts
 async getAllExplorers(page: number, limit: number, search?: string, paymentStatus?: string) {
   const skip = (page - 1) * limit;
 
-  // 1. Construct the 'where' clause
   let where: any = search ? {
     OR: [
       { firstName: { contains: search, mode: 'insensitive' } },
@@ -80,47 +80,38 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
     ]
   } : {};
 
-  // 2. Add the Payment Status Filter
+  // Handle specialized Payment Filter
   if (paymentStatus && paymentStatus !== 'all') {
-    const statusMap: Record<string, any> = {
-      'paid': 'COMPLETED',
-      'partial': 'PARTIALLY_PAID',
-      'unpaid': 'PENDING'
-    };
-
-    const targetStatus = statusMap[paymentStatus];
-
-    // This ensures we only get children whose specific registration 
-    // is tied to an application with the selected status.
-    where = {
-      ...where,
-      registrations: {
-        some: {
-          application: {
-            status: targetStatus
-          }
-        }
-      }
-    };
+    if (paymentStatus === 'unpaid') {
+      where = {
+        ...where,
+        OR: [
+          { registrations: { none: {} } }, 
+          { registrations: { some: { application: { status: 'PENDING' } } } },
+          { registrations: { some: { application: { payments: { none: { status: 'SUCCESSFUL' } } } } } }
+        ]
+      };
+    } else {
+      const statusMap: Record<string, any> = { paid: 'COMPLETED', partial: 'PARTIALLY_PAID' };
+      where = {
+        ...where,
+        registrations: { some: { application: { status: statusMap[paymentStatus] } } }
+      };
+    }
   }
 
-  // 3. Execute Query
   const [total, children] = await Promise.all([
     this.prisma.child.count({ where }),
     this.prisma.child.findMany({
-      where,
-      skip,
-      take: limit,
+      where, skip, take: limit,
       include: {
-        parent: {
-          select: { name: true, email: true }
-        },
+        parent: { select: { name: true, email: true } },
         registrations: {
           orderBy: { createdAt: 'desc' },
-          take: 1, // Get the most recent registration
+          take: 1,
           include: {
             application: {
-              select: { status: true }
+              include: { payments: { where: { status: 'SUCCESSFUL' }, select: { amount: true } } }
             }
           }
         }
@@ -129,23 +120,112 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
     })
   ]);
 
-  // 4. Map the results for a clean Frontend response
   const data = children.map((child: any) => {
-    // Access the status of the specific registration for this child
-    const latestReg = child.registrations?.[0];
-    const appStatus = latestReg?.application?.status;
+    const app = child.registrations?.[0]?.application;
+    const amountPaid = app?.payments?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
+    const totalAmount = Number(app?.totalAmount || 0);
 
-    let uiStatus = 'unpaid';
-    if (appStatus === 'COMPLETED') uiStatus = 'paid';
-    else if (appStatus === 'PARTIALLY_PAID') uiStatus = 'partial';
+    let status = 'unpaid';
+    if (app?.status === 'COMPLETED') status = 'paid';
+    else if (app?.status === 'PARTIALLY_PAID') status = 'partial';
+
+    return { ...child, paymentStatus: status, amountPaid, totalAmount };
+  });
+
+  return { data, meta: { total, page, lastPage: Math.ceil(total / limit) } };
+}
+/*async getAllExplorers(page: number, limit: number, search?: string, paymentStatus?: string) {
+  const skip = (page - 1) * limit;
+
+  // 1. SEARCH LOGIC
+  let where: any = search ? {
+    OR: [
+      { firstName: { contains: search, mode: 'insensitive' } },
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { parent: { name: { contains: search, mode: 'insensitive' } } }
+    ]
+  } : {};
+
+  // 2. ROBUST UNPAID/PAID/PARTIAL FILTER
+  if (paymentStatus && paymentStatus !== 'all') {
+    if (paymentStatus === 'unpaid') {
+      where = {
+        ...where,
+        OR: [
+          // Case A: Child has no registrations at all
+          { registrations: { none: {} } }, 
+          // Case B: Application is explicitly PENDING
+          { registrations: { some: { application: { status: 'PENDING' } } } },
+          // Case C: Application exists but has NO successful payments
+          { registrations: { some: { application: { payments: { none: { status: 'SUCCESSFUL' } } } } } }
+        ]
+      };
+    } else {
+      const statusMap: Record<string, any> = {
+        paid: 'COMPLETED',
+        partial: 'PARTIALLY_PAID',
+      };
+      where = {
+        ...where,
+        registrations: {
+          some: { application: { status: statusMap[paymentStatus] } }
+        }
+      };
+    }
+  }
+
+  // 3. DATABASE QUERY
+  const [total, children] = await Promise.all([
+    this.prisma.child.count({ where }),
+    this.prisma.child.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        parent: { select: { name: true, email: true } },
+        registrations: {
+          orderBy: { createdAt: 'desc' },
+          take: 1, // Only get the most recent class data
+          include: {
+            application: {
+              include: {
+                payments: {
+                  where: { status: 'SUCCESSFUL' },
+                  select: { amount: true }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+  ]);
+
+  // 4. DATA TRANSFORMATION & MATH
+  const data = children.map((child: any) => {
+    const latestReg = child.registrations?.[0];
+    const app = latestReg?.application;
     
-    // If there is no registration at all, you might want to call it "inactive"
-    if (!latestReg) uiStatus = 'unpaid'; 
+    // Sum of successful payments
+    const amountPaid = app?.payments?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
+    const totalAmount = Number(app?.totalAmount || 0);
+
+    // Logic to determine UI label
+    let uiStatus = 'unpaid';
+    if (app?.status === 'COMPLETED') uiStatus = 'paid';
+    else if (app?.status === 'PARTIALLY_PAID') uiStatus = 'partial';
+    // If it's partial but amount paid equals total, treat as paid
+    else if (app?.status === 'PARTIALLY_PAID' && amountPaid >= totalAmount && totalAmount > 0) uiStatus = 'paid';
 
     return {
       ...child,
       paymentStatus: uiStatus,
-      enrolledAt: latestReg?.createdAt || null
+      amountPaid,
+      totalAmount,
+      balance: totalAmount - amountPaid,
+      enrolledAt: latestReg?.createdAt || null,
+      currentClass: latestReg?.classId || 'Not Enrolled'
     };
   });
 
@@ -157,5 +237,5 @@ async getAllExplorers(page: number, limit: number, search?: string, paymentStatu
       lastPage: Math.ceil(total / limit),
     }
   };
-}
+}*/
 }
