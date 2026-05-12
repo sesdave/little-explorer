@@ -490,7 +490,7 @@ export const AdminRevenuePage = () => {
                       </p>
 
                       <p className="text-xs text-slate-400 font-bold">
-                        {transaction.parent.email}
+                        {transaction.parent?.email || 'N/A'}
                       </p>
                     </div>
                   </td>
