@@ -486,7 +486,7 @@ export const AdminRevenuePage = () => {
                   <td className="px-8 py-6">
                     <div>
                       <p className="font-black text-slate-900">
-                        {transaction.parent.name}
+                        {transaction.parent?.name || 'N/A'}
                       </p>
 
                       <p className="text-xs text-slate-400 font-bold">
@@ -519,7 +519,7 @@ export const AdminRevenuePage = () => {
 
                   <td className="px-8 py-6">
                     <p className="font-black text-slate-900">
-                      {transaction.session.name}
+                      {transaction.session?.name || 'N/A'}
                     </p>
                   </td>
 
