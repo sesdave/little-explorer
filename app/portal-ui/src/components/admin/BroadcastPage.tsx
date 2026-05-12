@@ -124,9 +124,9 @@ export const BroadcastPage = () => {
                     className="w-full p-4 border-4 border-slate-900 rounded-2xl font-black uppercase text-[11px] bg-slate-50 shadow-[4px_4px_0px_0px_#0f172a] focus:translate-y-[-2px] transition-all outline-none"
                   >
                     <option value="">Choose Class...</option>
-                    {(classes || []).map((c: any) => (
+                    { Array.isArray(classes) ? classes.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                    )): null}
                   </select>
                 </div>
               )}
@@ -235,7 +235,7 @@ export const BroadcastPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {(history || []).map((log: any) => (
+              {Array.isArray(history) ? classes.map((log: any) => (
                 <tr key={log.id} className="group hover:bg-slate-50 transition-colors">
                   <td className="py-5 px-2">
                     <p className="font-black text-xs uppercase italic">{new Date(log.createdAt).toLocaleDateString()}</p>
@@ -269,7 +269,7 @@ export const BroadcastPage = () => {
                     <ChevronRight size={18} className="text-slate-300 inline" />
                   </td>
                 </tr>
-              ))}
+              )): null}
             </tbody>
           </table>
           {!isLoadingHistory && history.length === 0 && (
