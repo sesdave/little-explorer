@@ -71,7 +71,7 @@ async getTransactions(filters: RevenueFilters) {
         createdAt: payment.createdAt,
 
         // Handle Parent/Donor Info
-        customer: isDonation 
+        parent: isDonation 
           ? { 
               name: payment.donation?.donorName || 'Anonymous Donor', 
               email: 'N/A', // Or pull from payment record if you stored it there
