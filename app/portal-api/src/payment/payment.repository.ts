@@ -333,9 +333,15 @@ export class PaymentRepository {
         },
       });
 
+      if (payment.type === 'REGISTRATION' && payment.applicationId) {
+        // 4. Atomic Balance Update (Your existing Staff Logic)
+        await this.updateApplicationBalances(payment.applicationId, tx as TransactionClient);
+        return { success: true, type: 'REGISTRATION' };
+      }
+
       // 2. Trigger the balance reconciliation logic using the same transaction client
       // This will automatically mark application as COMPLETED and CONFIRM registrations
-      await this.updateApplicationBalances(payment.applicationId, tx as TransactionClient);
+      
 
       return payment;
     });

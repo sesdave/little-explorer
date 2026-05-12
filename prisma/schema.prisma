@@ -211,14 +211,18 @@ model Payment {
   id String @id @default(cuid())
 
   // Link to the Application (The "Invoice")
-  applicationId String
-  application   Application @relation(fields: [applicationId], references: [id])
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id])
+
+  donationId String?   @unique
+  donation   Donation? @relation(fields: [donationId], references: [id])
 
   // Financial Data
   amount   Decimal       @db.Decimal(10, 2)
-  currency String        @default("USD")
+  currency String        @default("NGN")
   status   PaymentStatus @default(PENDING)
   method   PaymentMethod
+  type     PaymentType @default(REGISTRATION)
 
   // External Reference (e.g., Stripe PI ID or Paystack Ref)
   // Crucial for reconciling with the payment gateway
@@ -278,4 +282,25 @@ model Broadcast {
   updatedAt  DateTime        @updatedAt
 
   @@index([senderId])
+}
+
+enum PaymentType {
+  REGISTRATION // Your existing enrollment fees
+  DONATION     // Pure gifts/donations
+}
+
+model Donation {
+  id        String   @id @default(cuid())
+  donorName String?  @default("Anonymous")
+  message   String?  @db.Text
+  userId       String
+
+  amount     Decimal  @db.Decimal(10, 2)
+  
+  // Back-reference to the payment record
+  payment   Payment?
+
+  email     String
+
+  createdAt DateTime @default(now())
 }

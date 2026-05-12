@@ -8,11 +8,13 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { EnrollmentRepository } from 'src/enrollment/enrollment.repository';
 import { PaystackService } from './services/paystack.service';
 import { PaymentCronService } from './services/payment-cron.service';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     PrismaModule,
     EnrollmentModule, // 👈 Required for the fulfillApplicationPayment logic
+    UserModule
   ],
   controllers: [PaymentController],
   providers: [

@@ -51,4 +51,17 @@ export class PaymentController {
       body.amount
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('initialize-donation')
+  async initializeDonation(
+    @CurrentUser('id') userId: string,
+    @Body() body: { amount: number, donorName: string, message: string }
+  ) {
+    // The service handles business logic, authorization, and idempotency
+    return await this.paymentService.initializeDonation(
+      userId, 
+      body
+    );
+  }
 }

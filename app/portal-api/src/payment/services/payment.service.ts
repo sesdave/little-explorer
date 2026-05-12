@@ -10,12 +10,14 @@ import * as crypto from 'crypto';
 import { PaymentRepository } from '../payment.repository';
 import { nanoid } from 'nanoid';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentRepo: PaymentRepository,
+    private readonly userRepo: UserRepository,
   ) {}
 
   verifyPaystackSignature(
@@ -82,11 +84,25 @@ export class PaymentService {
         },
       });
 
-      // 5. Atomic Balance Update
-      // We pass 'tx' so this happens in the same transaction
-      await this.paymentRepo.updateApplicationBalances(applicationId, tx);
+      // 3. Branching Logic: REGISTRATION vs DONATION
+      if (payment.type === 'DONATION') {
+        // If there is a linked donation metadata record, you might want to tag it
+        return { success: true, type: 'DONATION' };
+      }
+
+      if (payment.type === 'REGISTRATION' && applicationId) {
+        // 4. Atomic Balance Update (Your existing Staff Logic)
+        await this.paymentRepo.updateApplicationBalances(applicationId, tx as any);
+        return { success: true, type: 'REGISTRATION' };
+      }
 
       return { success: true };
+
+      // 5. Atomic Balance Update
+      // We pass 'tx' so this happens in the same transaction
+      // await this.paymentRepo.updateApplicationBalances(applicationId, tx);
+
+      // return { success: true };
     });
   }
 
@@ -196,4 +212,52 @@ export class PaymentService {
       };
     });
   }
+
+  // payment.service.ts
+
+async initializeDonation(userId: string, dto: { amount: number, donorName: string, message: string }) {
+  return await this.prisma.$transaction(async (tx) => {
+
+    const user = await this.userRepo.findById(userId);
+    if(!user){
+      return
+    }
+    
+    // 1. Create the Donation intent record
+    const donation = await tx.donation.create({
+      data: {
+        amount: dto.amount,
+        donorName: dto.donorName || 'Anonymous',
+        message: dto.message,
+        email: user?.email,
+        userId: userId, // null if guest
+      },
+    });
+
+    // 2. Generate a unique reference
+    // Prefixing with 'DON_' makes it easy to identify in Paystack logs
+    const reference = `DON_${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
+
+    // 3. Create the PENDING Payment record
+    // We link it to the donationId we just created
+    await tx.payment.create({
+      data: {
+        amount: dto.amount,
+        status: 'PENDING',
+        externalReference: reference,
+        type: 'DONATION',
+        donationId: donation.id, 
+        method: 'PAYSTACK',
+      },
+    });
+
+    // 4. Return the data the frontend needs to trigger the Paystack UI
+    return {
+      reference,
+      amount: Math.round(dto.amount * 100), // Convert to Kobo for Paystack
+      email: user?.email,
+      donationId: donation.id
+    };
+  });
+}
 }

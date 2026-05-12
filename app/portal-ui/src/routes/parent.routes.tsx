@@ -7,6 +7,7 @@ import { PaymentPage } from '@/pages/payment/PaymentPage';
 import { PaymentVerifying } from '@/pages/payment/PaymentVerifying';
 import api from '@/services/api';
 import { AssignedClassesPage } from '@/components/dashboard/AssignedClassesPage ';
+import { DonationPage } from '@/components/donation/DonationPage';
 
 export const parentRoutes: RouteObject = {
   path: '/dashboard', // 👈 ADD THE SLASH HERE
@@ -41,6 +42,10 @@ export const parentRoutes: RouteObject = {
      {
       path: 'classes',
       element: <AssignedClassesPage />,
+    },
+    {
+      path: 'donate',
+      element: <DonationPage />,
     },
   ]
 };

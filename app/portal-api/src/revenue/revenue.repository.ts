@@ -213,6 +213,7 @@ export class RevenueRepository {
         where,
 
         include: {
+          donation: true,
           application: {
             include: {
               parent: true,

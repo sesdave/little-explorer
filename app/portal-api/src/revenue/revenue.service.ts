@@ -48,7 +48,67 @@ export class RevenueService {
     };
   }
 
-  async getTransactions(filters: RevenueFilters) {
+  // src/modules/admin/revenue/revenue.service.ts
+
+async getTransactions(filters: RevenueFilters) {
+  const transactions = await this.revenueRepository.getTransactions(filters);
+
+  return {
+    ...transactions,
+    data: transactions.data.map((payment) => {
+      // Determine if this is a donation or registration
+      const isDonation = payment.type === 'DONATION';
+
+      return {
+        id: payment.id,
+        amount: Number(payment.amount),
+        currency: payment.currency,
+        status: payment.status,
+        method: payment.method,
+        type: payment.type,
+        externalReference: payment.externalReference,
+        paidAt: payment.paidAt,
+        createdAt: payment.createdAt,
+
+        // Handle Parent/Donor Info
+        customer: isDonation 
+          ? { 
+              name: payment.donation?.donorName || 'Anonymous Donor', 
+              email: 'N/A', // Or pull from payment record if you stored it there
+              isDonation: true 
+            }
+          : { 
+              id: payment.application?.parent.id,
+              name: payment.application?.parent.name,
+              email: payment.application?.parent.email,
+              isDonation: false
+            },
+
+        // Handle Registration Specifics safely
+        session: payment.application ? {
+          id: payment.application.session.id,
+          name: payment.application.session.name,
+        } : null,
+
+        children: payment.application?.registrations.map((reg) => ({
+          id: reg.child.id,
+          fullName: `${reg.child.firstName} ${reg.child.lastName}`,
+          className: reg.class.name,
+        })) || [],
+
+        donationDetails: isDonation ? {
+          message: payment.donation?.message
+        } : null,
+
+        totals: {
+          childrenCount: payment.application?.registrations.length || 0,
+        },
+      };
+    }),
+  };
+}
+
+  /*async getTransactions(filters: RevenueFilters) {
     const transactions =
       await this.revenueRepository.getTransactions(
         filters,
@@ -105,7 +165,7 @@ export class RevenueService {
         },
       })),
     };
-  }
+  }*/
 
   async getRevenueSummary() {
     return this.revenueRepository.getRevenueSummary();
