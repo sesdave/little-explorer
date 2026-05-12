@@ -235,7 +235,7 @@ export const BroadcastPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {Array.isArray(history) ? classes.map((log: any) => (
+              {Array.isArray(history) ? history.map((log: any) => (
                 <tr key={log.id} className="group hover:bg-slate-50 transition-colors">
                   <td className="py-5 px-2">
                     <p className="font-black text-xs uppercase italic">{new Date(log.createdAt).toLocaleDateString()}</p>
