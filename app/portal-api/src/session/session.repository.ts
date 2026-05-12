@@ -175,6 +175,9 @@ async findById(id: string) {
       id: true,
       name: true, // 👈 keep backend consistent
       capacity: true,
+      ageMax: true,
+      ageMin: true,
+      price: true,
       _count: {
         select: { registrations: true },
       },
