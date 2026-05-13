@@ -118,6 +118,7 @@ export const PaymentPage = () => {
         reference: reference,
         metadata: { applicationId, paymentPlan, expectedAmount: payableAmount }
       };
+      console.log("config", config);
 
       const handler = (window as any).PaystackPop.setup({
         ...config,
