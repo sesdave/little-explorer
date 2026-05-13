@@ -101,7 +101,88 @@ export const PaymentPage = () => {
     }
   };
 
+  const onSuccess = async (reference: any) => {
+      setIsInitializing(false);
+     navigate(
+       `/dashboard/payment/verifying?reference=${reference.reference}`,
+     );
+   };
+
+   const onClose = () => {
+     setIsInitializing(false)
+   };
+
   const handlePaymentClick = async () => {
+    // 1. Client-side Pre-checks
+
+    try {
+      setIsInitializing(true);
+
+      // 2. GET AUTHORITY FROM BACKEND
+      // We send our intent, backend validates and creates the PENDING record
+      const response = await api.post('/v1/payments/initialize', {
+        applicationId,
+        amount: payableAmount,
+      });
+
+      const backendData = response.data;
+      console.log("backend data", backendData)
+
+      if (!backendData?.reference) {
+        throw new Error("Backend failed to generate a transaction reference.");
+      }
+
+      // 3. TRIGGER PAYSTACK WITH BACKEND DATA
+      // We pass EVERYTHING in one object to the trigger function
+      const paymentArgs: any = {
+        publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        email: backendData.email || userEmail,
+        amount: backendData.amount, // Using backend's calculated amount (usually kobo)
+        reference: backendData.reference, // Using backend's generated reference
+        metadata: {
+          applicationId,
+          expectedAmount: backendData.amount,
+          paymentPlan,
+           custom_fields: [
+              {
+                display_name: "Application ID",
+                variable_name: "application_id",
+                value: applicationId ?? "",
+              },
+              {
+                display_name: "Payment Plan",
+                variable_name: "payment_plan",
+                value: paymentPlan,
+              },
+              {
+                display_name: "Expected Amount",
+                variable_name: "expected_amount",
+                value: payableAmount.toString(),
+              },
+            ],
+        }
+      };
+      const initializePayment = usePaystackPayment(paymentArgs);
+      initializePayment({
+      onSuccess,
+      onClose,
+    });
+
+      //initializePaystack(paymentArgs);;
+
+    } catch (err: any) {
+      console.error("Payment Init Error:", err);
+      setStatusModal({
+        show: true,
+        title: "Payment Error",
+        message: err.response?.data?.message || "Could not connect to payment server. Please try again.",
+      });
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+  /*const handlePaymentClick = async () => {
     try {
       setIsInitializing(true);
       const response = await api.post('/v1/payments/initialize', {
@@ -112,7 +193,7 @@ export const PaymentPage = () => {
       const { reference, amount: backendAmount, email: backendEmail } = response.data;
       
       const config: any = {
-        publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_aeda5f517067e18dcc905a5193b7f68b87f9e51b',
         email: backendEmail || userEmail,
         amount: backendAmount,
         reference: reference,
@@ -133,7 +214,7 @@ export const PaymentPage = () => {
     } finally {
       setIsInitializing(false);
     }
-  };
+  };*/
 
   return (
     <div className="max-w-2xl mx-auto p-12 text-center space-y-8 animate-in fade-in duration-500">
