@@ -84,7 +84,7 @@ export class ClassService {
     this.logger.log(`Bulk creating ${classes.length} classes.`);
     
     // O(1) insert via Repository
-    return this.repository.createMany(classes);
+    return this.repository.bulkSync(classes);
   }
 
   /**

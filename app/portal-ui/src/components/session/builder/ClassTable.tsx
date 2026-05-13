@@ -10,6 +10,8 @@ export const ClassTable = ({ classes, onUpdate, onDelete, onAdd }: any) => {
             <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-400">Class Name</th>
             <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-400">Age Range</th>
             <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-400">Capacity</th>
+            {/* NEW COLUMN */}
+            <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-400">Price (₦)</th>
             <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
           </tr>
         </thead>

@@ -14,6 +14,7 @@ import { SystemStatus } from '@/components/dashboard/SystemStatus';
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const familyData = useLoaderData() as any;
+  console.log("entered loader", familyData)
 
   const setChildren = useFamilyStore((state) => state.setChildren);
   const childrenFromStore = useFamilyStore((state) => state.children);
@@ -193,7 +194,7 @@ export const DashboardPage = () => {
               </p>
             </div>
 
-            {session.isClassVisible ? (
+            {session?.isClassVisible ? (
               <Button
                 onClick={() => navigate('/dashboard/classes')}
                 className="bg-rose-400 text-white border-4 border-slate-900 px-10 py-5 text-xl font-black"

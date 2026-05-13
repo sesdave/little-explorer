@@ -19,6 +19,36 @@ export class ClassRepository {
     });
   }
 
+  async bulkSync(classes: any[]) {
+
+  const operations = classes.map((cls) => {
+    // Separate metadata from DB fields
+    const { isDirty, id, ...data } = cls;
+
+    // 1. If it's a temporary ID, create it (omit the ID to let DB generate a UUID)
+    if (id.startsWith('temp-')) {
+      return this.prisma.class.create({
+        data: {
+          ...data,
+          // Ensure price is handled (null is fine if DB allows it)
+          price: data.price === null ? undefined : data.price,
+        }
+      });
+    }
+
+    // 2. If it's an existing UUID, update it
+    return this.prisma.class.update({
+      where: { id },
+      data: {
+        ...data,
+        price: data.price === null ? null : data.price,
+      }
+    });
+  });
+
+  return Promise.all(operations);
+}
+
   async findByIdWithCount(id: string) {
     return this.prisma.class.findUnique({
       where: { id },

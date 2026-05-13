@@ -41,6 +41,7 @@ export interface ClassEntity {
   capacity: number;
   minAge: number;
   maxAge: number;
+  price: number;
   
   // Principal-level Metadata
   clonedFromId?: string | null;
