@@ -76,10 +76,10 @@ export const BillingPage = () => {
                     </div>
                     <div>
                       <h3 className="font-black uppercase tracking-tight text-slate-900 text-sm sm:text-base">
-                        {payment.purpose || 'Registration Payment'}
+                        {payment.type || 'Registration Payment'}
                       </h3>
                       <p className="text-[11px] font-bold text-slate-400 tracking-wide mt-0.5">
-                        REF: <span className="font-mono text-slate-600">{payment.reference}</span>
+                        REF: <span className="font-mono text-slate-600">{payment.externalReference}</span>
                       </p>
                       <p className="text-[10px] font-medium text-slate-400 mt-1">
                         {payment.createdAt ? formatDate(payment.createdAt) : 'Date unavailable'}

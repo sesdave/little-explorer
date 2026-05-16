@@ -105,7 +105,8 @@ async findRecentPayments(userId: string, limit: number = 20) {
       extra_amount: true, 
       status: true,
       method: true,
-      type: true,         
+      type: true, 
+      externalReference: true,        
       createdAt: true,
       donation: {
         select: { donorName: true, message: true },

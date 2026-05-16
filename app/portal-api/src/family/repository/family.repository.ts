@@ -15,52 +15,56 @@ export class FamilyRepository {
   ) {}
 
   async getAssignedClasses(
-    userId: string,
-    sessionId: string
-  ) {
-    
-    const children =
-      await this.prisma.child.findMany({
+  userId: string,
+  sessionId: string
+) {
+  const children = await this.prisma.child.findMany({
+    where: {
+      parentId: userId,
+    },
+
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      photoUrl: true,
+
+      registrations: {
         where: {
-          parentId: userId,
-        },
-
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          photoUrl: true,
-
-          registrations: {
-            where: {
-              sessionId,
-            },
-
-            select: {
-              id: true,
-              status: true,
-              createdAt: true,
-
-              class: {
-                select: {
-                  id: true,
-                  name: true,
-                  capacity: true,
-                  registrationsCount: true,
-                  ageMin: true,
-                  ageMax: true,
-                  isVisible: true,
-                },
-              },
+          sessionId,
+          // 🛠️ FILTER: Only pull registrations attached to valid, non-failed applications
+          application: {
+            status: {
+              notIn: ['EXPIRED', 'CANCELLED'], // Excludes dead/failed application states
             },
           },
         },
 
-        orderBy: {
-          firstName: 'asc',
-        },
-      });
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
 
-    return children;
-  }
+          class: {
+            select: {
+              id: true,
+              name: true,
+              capacity: true,
+              registrationsCount: true,
+              ageMin: true,
+              ageMax: true,
+              isVisible: true,
+            },
+          },
+        },
+      },
+    },
+
+    orderBy: {
+      firstName: 'asc',
+    },
+  });
+
+  return children;
+}
 }

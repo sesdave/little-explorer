@@ -28,6 +28,21 @@ const formatCurrency = (amount: number, currency: 'USD' | 'NGN') => {
   }).format(amount);
 };
 
+// 🎨 Helper to resolve status badge text color classes dynamically
+const getStatusColorClass = (status: string) => {
+  const normalized = status?.toUpperCase();
+  if (normalized === 'SUCCESSFUL' || normalized === 'SUCCESS') {
+    return 'text-emerald-500';
+  }
+  if (normalized === 'PENDING') {
+    return 'text-amber-500';
+  }
+  if (normalized === 'FAILED') {
+    return 'text-rose-500';
+  }
+  return 'text-slate-500';
+};
+
 export const RecentPaymentsCard = ({
   payments,
   currency = 'NGN',
@@ -69,7 +84,8 @@ export const RecentPaymentsCard = ({
                     {formatCurrency(payment.amount, currency)}
                   </p>
 
-                  <span className="text-[9px] font-black uppercase text-emerald-500">
+                  {/* 🛠️ Dynamic status color text replacement */}
+                  <span className={`text-[9px] font-black uppercase ${getStatusColorClass(payment.status)}`}>
                     {payment.status}
                   </span>
                 </div>
@@ -88,8 +104,9 @@ export const RecentPaymentsCard = ({
 
       {/* FOOTER */}
       <button 
-      onClick={() => navigate('/dashboard/billing')}
-      className="w-full mt-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all">
+        onClick={() => navigate('/dashboard/billing')}
+        className="w-full mt-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"
+      >
         View All Billing
       </button>
     </div>
