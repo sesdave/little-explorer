@@ -158,6 +158,7 @@ async findById(id: string) {
             ageMin: true,
             ageMax: true,
             capacity: true,
+            price: true,
             _count: {
               select: { registrations: true },
             },

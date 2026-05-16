@@ -40,8 +40,26 @@ export const RegistrationPage = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const pricePerChild = Number(session.pricePerClass || 0);
-  const totalAmount = selectedIds.length * pricePerChild;
+  // 🛠️ DYNAMIC PRICING CALCULATION (Per-child dynamic checks)
+  const totalAmount = selectedIds.reduce((sum, childId) => {
+    const child = children.find((c: any) => c.id === childId);
+    if (!child) return sum;
+
+    const age = calculateAge(child.dob);
+    
+    // Find the eligible class matching this child's age group limits
+    const assignedClass = availableClasses.find(
+      (c: any) => age >= c.ageMin && age <= c.ageMax
+    );
+
+    // Dynamic resolution fallback check
+    const individualPrice = assignedClass?.price !== undefined && assignedClass?.price !== null
+      ? Number(assignedClass.price)
+      : Number(session.pricePerClass || 0);
+
+    return sum + individualPrice;
+  }, 0);
+
   const amountToPayNow = paymentPlan === 'FULL' ? totalAmount : totalAmount / 2;
 
   const toggleSelection = (id: string, isSelectable: boolean) => {

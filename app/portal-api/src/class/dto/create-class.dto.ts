@@ -5,7 +5,7 @@ import {
 } from 'class-validator';
 
 export class CreateClassDto {
-  @IsUUID()
+  //@IsUUID()
   @IsOptional() // Optional because existing classes have IDs, new ones might not yet
   id?: string;
 
