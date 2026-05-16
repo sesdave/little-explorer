@@ -103,7 +103,7 @@ export const DonationPage = () => {
       <div className="bg-white border-4 border-slate-900 rounded-[2.5rem] p-8 shadow-[12px_12px_0px_0px_#0f172a] space-y-6">
         <div className="space-y-3">
           <label className="text-xs font-black uppercase text-slate-400">Select or Enter Amount</label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {suggestions.map((s) => (
               <button
                 key={s}

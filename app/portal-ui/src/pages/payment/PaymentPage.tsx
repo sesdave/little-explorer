@@ -244,8 +244,8 @@ export const PaymentPage = () => {
           <span className="font-black italic text-emerald-400">₦{amountPaid.toLocaleString()}</span>
         </div>
 
-        <div className="flex justify-between pt-2 sm:flex-row" >
-          <span className="font-bold text-slate-400 uppercase text-xs">Remaining Balance</span>
+        <div className="flex justify-between pt-4 sm:flex-row border-slate-700" >
+          <span className="font-bold text-slate-400 uppercase">Remaining Balance</span>
           <span className="text-3xl font-black text-rose-400 italic">{formattedRemaining}</span>
         </div>
 
