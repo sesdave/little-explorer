@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
 import { LogOut, User as UserIcon } from 'lucide-react';
 import { useState } from 'react';
+import { Footer } from '@/Footer';
 
 export const ParentPortalLayout = () => {
   const { user, logout } = useAuthStore();
@@ -121,6 +122,7 @@ export const ParentPortalLayout = () => {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#FDFCFB] via-[#FDFCFB]/80 to-transparent pointer-events-none">
         {/* Future home for a bottom navigation bar if needed */}
       </div>
+      <Footer />
     </div>
   );
 };
