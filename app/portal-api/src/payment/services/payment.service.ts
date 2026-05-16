@@ -179,7 +179,7 @@ export class PaymentService {
     return payment?.status || 'PENDING';
   }
 
-  async initializePayment(userId: string, applicationId: string, amount: number) {
+  async initializePayment(userId: string, applicationId: string, amount: number, extra_amount: number) {
     // 1. Business Logic: Pre-flight checks
     const application = await this.paymentRepo.getApplicationData(applicationId);
     
@@ -193,7 +193,8 @@ export class PaymentService {
     // 2. Logic: Idempotency check
     const existing = await this.paymentRepo.findRecentPending(applicationId, amount);
     if (existing) {
-      return { reference: existing.externalReference, email: application.parent.email, amount: Math.round(Number(existing.amount) * 100) };
+      const combinedTotal = Number(existing.amount) + Number(existing.extra_amount ?? 0);
+      return { reference: existing.externalReference, email: application.parent.email, amount: Math.round(combinedTotal * 100) };
     }
 
     // 3. Logic: Orchestrate the Write via Transaction
@@ -201,14 +202,14 @@ export class PaymentService {
     
     return await this.prisma.$transaction(async (tx) => {
       const payment = await this.paymentRepo.createPaymentRecord(
-        { applicationId, amount, reference },
+        { applicationId, amount, reference, extra_amount },
         tx // Passing the transaction delegate
       );
 
       return {
         reference: payment.externalReference,
         email: application.parent.email,
-        amount: Math.round(amount * 100)
+        amount: Math.round((amount + extra_amount) * 100)
       };
     });
   }

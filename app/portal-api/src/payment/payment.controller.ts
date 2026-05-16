@@ -42,13 +42,14 @@ export class PaymentController {
   @Post('initialize')
   async initialize(
     @CurrentUser('id') userId: string,
-    @Body() body: { applicationId: string; amount: number }
+    @Body() body: { applicationId: string; amount: number, extra_amount: number }
   ) {
     // The service handles business logic, authorization, and idempotency
     return await this.paymentService.initializePayment(
       userId, 
       body.applicationId, 
-      body.amount
+      body.amount,
+      body.extra_amount
     );
   }
 

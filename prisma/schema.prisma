@@ -227,6 +227,7 @@ model Payment {
   // External Reference (e.g., Stripe PI ID or Paystack Ref)
   // Crucial for reconciling with the payment gateway
   externalReference String? @unique
+  extra_amount Decimal  @db.Decimal(10, 2) @default(0)
 
   // Metadata
   paidAt    DateTime?

@@ -50,10 +50,14 @@ export const useEnrollmentStatus = (data: EnrollmentData) => {
   const maybeProcessing = useMemo(() => {
     if (!activeApplication || !activeApplication.payments) return false;
 
-    // Check if any payment associated with this application is currently 'PENDING'
     return activeApplication.payments.some(
-      (payment: any) => payment.status === 'PENDING'
+      (payment: any) => payment.status === 'PENDING' && payment.type !== 'DONATION'
     );
+
+    // Check if any payment associated with this application is currently 'PENDING'
+    // return activeApplication.payments.some(
+    //   (payment: any) => payment.status === 'PENDING'
+    // );
   }, [activeApplication]);
 
   const isActive = useMemo(() => {

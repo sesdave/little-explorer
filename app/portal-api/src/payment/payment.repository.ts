@@ -310,6 +310,7 @@ export class PaymentRepository {
         applicationId: data.applicationId,
         amount: data.amount,
         externalReference: data.reference,
+        extra_amount: data.extra_amount,
         status: 'PENDING',
         method: 'PAYSTACK'
       }

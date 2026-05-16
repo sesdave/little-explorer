@@ -117,12 +117,17 @@ export const PaymentPage = () => {
 
     try {
       setIsInitializing(true);
+      const isFullPlanSupport = paymentPlan === 'FULL' && payableAmount > remainingBalance;
+      
+      const baseAmountToSend = isFullPlanSupport ? remainingBalance : payableAmount;
+      const extraAmountToSend = isFullPlanSupport ? (payableAmount - remainingBalance) : 0;
 
       // 2. GET AUTHORITY FROM BACKEND
       // We send our intent, backend validates and creates the PENDING record
       const response = await api.post('/v1/payments/initialize', {
         applicationId,
-        amount: payableAmount,
+        amount: baseAmountToSend,
+        extra_amount: extraAmountToSend
       });
 
       const backendData = response.data;
@@ -239,7 +244,7 @@ export const PaymentPage = () => {
           <span className="font-black italic text-emerald-400">₦{amountPaid.toLocaleString()}</span>
         </div>
 
-        <div className="flex justify-between pt-2">
+        <div className="flex justify-between pt-2 sm:flex-row" >
           <span className="font-bold text-slate-400 uppercase text-xs">Remaining Balance</span>
           <span className="text-3xl font-black text-rose-400 italic">{formattedRemaining}</span>
         </div>
