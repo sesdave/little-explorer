@@ -104,7 +104,10 @@ export const RecentPaymentsCard = ({
 
       {/* FOOTER */}
       <button 
-        onClick={() => navigate('/dashboard/billing')}
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate('/dashboard/billing');
+        }}
         className="w-full mt-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"
       >
         View All Billing
