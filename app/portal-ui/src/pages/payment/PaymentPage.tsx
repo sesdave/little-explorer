@@ -244,9 +244,17 @@ export const PaymentPage = () => {
           <span className="font-black italic text-emerald-400">₦{amountPaid.toLocaleString()}</span>
         </div>
 
-        <div className="flex justify-between pt-4 sm:flex-row border-slate-700" >
+        {/* <div className="flex justify-between pt-4 sm:flex-row border-slate-700" >
           <span className="font-bold text-slate-400 uppercase">Remaining Balance</span>
           <span className="text-3xl font-black text-rose-400 italic">{formattedRemaining}</span>
+        </div> */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-t border-slate-700 pt-4 mt-2 gap-1 sm:gap-0">
+          <span className="font-bold text-slate-400 uppercase text-[11px] sm:text-xs tracking-wider">
+            Remaining Balance
+          </span>
+          <span className="text-2xl sm:text-3xl font-black text-rose-400 italic tracking-tight whitespace-nowrap">
+            {formattedRemaining}
+          </span>
         </div>
 
         {/* EXTRA SUPPORT ONLY FOR FULL PLAN */}
