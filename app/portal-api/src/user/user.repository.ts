@@ -87,7 +87,50 @@ export class UserRepository {
 
   // apps/api/src/user/user.repository.ts
 
-async findRecentPayments(userId: string, limit: number = 5) {
+  // apps/api/src/user/user.repository.ts
+
+async findRecentPayments(userId: string, limit: number = 20) {
+  const payments = await this.prisma.payment.findMany({
+    where: {
+      OR: [
+        { application: { parentId: userId } },
+        { donation: { userId: userId } },
+      ],
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    select: {
+      id: true,
+      amount: true,
+      extra_amount: true, 
+      status: true,
+      method: true,
+      type: true,         
+      createdAt: true,
+      donation: {
+        select: { donorName: true, message: true },
+      },
+      application: {
+        select: {
+          session: { select: { name: true } }
+        }
+      }
+    },
+  });
+
+  // 🛠️ Combine them here before returning to the service layer
+  return payments.map(payment => {
+    const base = Number(payment.amount || 0);
+    const extra = Number(payment.extra_amount || 0);
+
+    return {
+      ...payment,
+      amount: base + extra, // Overwrites the 'amount' field with the sum total
+    };
+  });
+}
+
+/*async findRecentPayments(userId: string, limit: number = 5) {
   return this.prisma.payment.findMany({
     where: {
       application: {
@@ -110,7 +153,7 @@ async findRecentPayments(userId: string, limit: number = 5) {
       }
     },
   });
-}
+}*/
 
 // apps/api/src/user/user.repository.ts
 

@@ -1,4 +1,5 @@
 import { Receipt } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type Payment = {
   id: string;
@@ -31,6 +32,7 @@ export const RecentPaymentsCard = ({
   payments,
   currency = 'NGN',
 }: Props) => {
+  const navigate = useNavigate();
   return (
     <div className="bg-white border-4 border-slate-900 rounded-[2rem] p-6 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
 
@@ -85,7 +87,9 @@ export const RecentPaymentsCard = ({
       </div>
 
       {/* FOOTER */}
-      <button className="w-full mt-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all">
+      <button 
+      onClick={() => navigate('/dashboard/billing')}
+      className="w-full mt-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all">
         View All Billing
       </button>
     </div>

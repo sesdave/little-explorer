@@ -8,6 +8,7 @@ import { PaymentVerifying } from '@/pages/payment/PaymentVerifying';
 import api from '@/services/api';
 import { AssignedClassesPage } from '@/components/dashboard/AssignedClassesPage ';
 import { DonationPage } from '@/components/donation/DonationPage';
+import { BillingPage } from '@/components/dashboard/BillingPage';
 
 export const parentRoutes: RouteObject = {
   path: '/dashboard', // 👈 ADD THE SLASH HERE
@@ -22,6 +23,11 @@ export const parentRoutes: RouteObject = {
     { 
       path: 'register', 
       element: <RegistrationPage />,
+      loader: async () => await getFamilyDashboardData(),
+    },
+    { 
+      path: 'billing', 
+      element: <BillingPage />,
       loader: async () => await getFamilyDashboardData(),
     },
      // 🧠 NEW: Payment page (Paystack entry point)
